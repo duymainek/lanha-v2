@@ -15,12 +15,11 @@ export default function LandingPage() {
       <Navbar />
       <main>
         <Hero />
+        <Amenities />
         <PricingTable_building1 />
         <PricingTable_building2 />
-
-        <Gallery />
-        <Amenities />
         <Location />
+        <Gallery />
       </main>
       <Footer />
     </div>

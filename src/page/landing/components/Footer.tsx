@@ -11,14 +11,14 @@ export function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <EnvelopeIcon className="w-5 h-5" />
-                <a href="mailto:info@lanha.vn" className="hover:text-white transition-colors">
-                  info@lanha.vn
+                <a href="mailto:info@lanha.space" className="hover:text-white transition-colors">
+                  info@lanha.space
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <PhoneIcon className="w-5 h-5" />
-                <a href="tel:0905157957" className="hover:text-white transition-colors">
-                  090.515.7957
+                <a href="tel:0777460408" className="hover:text-white transition-colors">
+                  0777.460.408
                 </a>
               </div>
             </div>
@@ -37,9 +37,9 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Theo Dõi</h3>
             <div className="space-y-3">
-              <a href="#" className="block hover:text-white transition-colors">Facebook</a>
-              <a href="#" className="block hover:text-white transition-colors">Instagram</a>
-              <a href="#" className="block hover:text-white transition-colors">Zalo</a>
+              <a href="https://www.facebook.com/profile.php?id=61561284322137" className="block hover:text-white transition-colors">Facebook</a>
+              <a href="https://www.instagram.com/lanha.space/" className="block hover:text-white transition-colors">Instagram</a>
+              <a href="https://zalo.me/0777460408" className="block hover:text-white transition-colors">Zalo</a>
             </div>
           </div>
         </div>

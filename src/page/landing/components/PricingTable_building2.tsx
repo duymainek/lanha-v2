@@ -4,37 +4,67 @@ import { CheckIcon } from '@heroicons/react/24/solid'
 import { MinusIcon } from '@heroicons/react/24/outline'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Switch } from '@/components/ui/switch'
+import { ContactDialog } from './ContactDialog'
+
+const information = [
+  {key: 'type', name: 'Loại căn hộ'},
+  {key: 'm2', name: 'Diện tích'},
+  {key: 'deposit', name: 'Đặt cọc'},
+  {key: 'payment', name: 'Thanh toán'},
+]
+
+const feeServices = [
+  {key: 'electricity', name: 'Điện'},
+  {key: 'water', name: 'Nước/người', tooltip: 'Tính trên số lượng người ở' },
+  {key: 'hot_water', name: 'Nước nóng/người', tooltip: 'Sử dụng nước năng lượng mặt trời. Chi phí sẽ chia đầu người của toà nhà' },
+]
 
 const features = [
-  { key: 'live', name: 'Live Collaboration', tooltip: 'Cộng tác thời gian thực trên tài liệu.' },
-  { key: 'unlimited', name: 'Unlimited projects', tooltip: 'Không giới hạn số lượng dự án.' },
-  { key: 'custom', name: 'Custom permissions', tooltip: 'Phân quyền chi tiết cho từng thành viên.' },
-  { key: 'team', name: 'Team members', tooltip: 'Quản lý thành viên nhóm.' },
+  { key: 'wifi', name: 'Wifi', tooltip: 'Wifi tốc độ cao 1000Mbps' },
+  { key: 'air_conditioner', name: 'Điều hòa', tooltip: 'Điều hòa 1.5HP' },
+  { key: 'washing_machine', name: 'Máy giặt', tooltip: 'Máy giặt 9kg' },
+  { key: 'refrigerator', name: 'Tủ lạnh', tooltip: 'Tủ lạnh 250L' },
+  { key: 'bed', name: 'Giường 1m6',},
+  { key: 'wardrobe', name: 'Tủ quần áo',},
+  { key: 'kitchen', name: 'Bếp từ',},
+  { key: 'bathroom', name: 'Phòng tắm khép kín',},
+  { key: 'balcony', name: 'Sân thượng',},
+  { key: 'parking', name: 'Chỗ đậu xe',},
+  { key: 'balcony', name: 'Ban công',},
 ]
 
 const planData = [
   {
-    name: 'FREE',
-    description: 'Quis suspendisse ut fermentum neque vivamus.',
-    price: { monthly: 0, annual: 0 },
-    features: [true, true, false, false],
+    name: 'PRIVATE',
+    description: 'Căn hộ có lối đi riêng, đầy đủ tiện nghi cơ bản',
+    price: { monthly: '3.7M', annual: '3.3M' },
+    information: ['1 phòng ngủ', '50m2', '1 tháng', '1 tháng'],
+    features: [true, true, true, true, true, true, true, true, false, true, false, ],
+    feeServices: ['3.8k/kw', '80.000đ','Chia theo người ở'],
   },
   {
-    name: 'PRO',
-    description: 'Quis eleifend a tincidunt pellentesque.',
-    price: { monthly: 100, annual: 1000 },
-    features: [true, true, true, false],
+    name: 'STUDIO',
+    description: 'Căn hộ studio với sân thượng riêng',
+    price: { monthly: '3.5M', annual: '3M' },
+    information: ['Studio', '30m2', '1 tháng', '1 tháng'],
+    features: [true, true, true, true, false, false, false, false, true, true, true, ],
+    recommended: false,
+    feeServices: ['3.8k/kw', '80.000đ', 'Chia theo người ở'],
+  },
+  {
+    name: 'STANDARD',
     recommended: true,
-  },
-  {
-    name: 'PREMIUM',
-    description: 'Orci volutpat ut sed sed neque, dui eget.',
-    price: { monthly: 150, annual: 1500 },
-    features: [true, true, true, true],
+    description: 'Căn hộ 1 phòng ngủ với ban công',
+    price: { monthly: '5M', annual: '4.5M' },
+    information: ['1 phòng ngủ', '60m2', '1 tháng', '1 tháng'],
+    features: [true, true, true, true, true, true, true, true, true, true, true, ],
+    feeServices: ['3.8k/kw', '80.000đ','Chia theo người ở'],
   },
 ]
 
 export function PricingTable_building2() {
+  const [openContact, setOpenContact] = useState(false)
+
   const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
   const priceUnit = billing === 'monthly' ? '/month' : '/year'
 
@@ -43,9 +73,9 @@ export function PricingTable_building2() {
       <div className="max-w-5xl mx-auto px-2 sm:px-">
         {/* Heading */}
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">Gói căn hộ</h2>
+          <h2 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">Nguyễn Đình Chiểu Apartment</h2>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            Chọn gói căn hộ phù hợp với nhu cầu của bạn.
+            228 Nguyễn Đình Chiểu, Khuê Mỹ, Ngũ Hành Sơn, Đà Nẵng
           </p>
         </div>
         {/* Toggle */}
@@ -69,7 +99,7 @@ export function PricingTable_building2() {
             >
               {/* Empty cell for toggle row */}
               <div className="flex flex-col justify-end border-r border-slate-200 bg-white px-6 py-6"></div>
-              {planData.map((plan, idx) => (
+              {planData.map((plan,) => (
                 <div
                   key={plan.name}
                   className={`flex flex-col items-center px-6 py-6 border-r last:border-r-0 border-slate-200 bg-white ${plan.recommended ? 'shadow-lg border-2 border-slate-900 z-10' : ''}`}
@@ -78,20 +108,46 @@ export function PricingTable_building2() {
                   <span className="text-base font-bold text-gray-900 uppercase tracking-wide mb-1">{plan.name}</span>
                   <span className="text-sm text-gray-500 text-center mb-4">{plan.description}</span>
                   <div className="flex items-end mb-2">
-                    <span className="text-4xl font-extrabold text-gray-900">{plan.price[billing] === 0 ? '$0' : `$${plan.price[billing]}`}</span>
+                    <span className="text-4xl font-extrabold text-gray-900">{plan.price[billing]}</span>
                     <span className="text-base text-gray-400 ml-1 pb-1">{priceUnit}</span>
                   </div>
-                  <Button className="w-full bg-black text-white rounded-md mt-4 hover:opacity-90 transition-opacity" size="lg">
-                    Get Started
-                  </Button>
+                  <ContactButton onClick={() => setOpenContact(true)} />
                 </div>
               ))}
+
+              {/* Information Title Row */}
+              <div className="flex items-center border-t border-r border-slate-200 bg-slate-50 px-6 py-4">
+                <span className="text-sm font-semibold text-gray-900">Thông tin</span>
+              </div>
+              {planData.map((_, idx) => (
+                <div key={idx + '-information-title'} className="border-t border-r last:border-r-0 border-slate-200 bg-slate-50 px-6 py-4"></div>
+              ))}
+              {/* Information Rows */}
+              {information.map((feature, rowIdx) => (
+                <>
+                  {/* Feature label + info icon */}
+                  <div key={feature.key} className="flex items-center gap-2 border-t border-r border-slate-200 bg-white px-6 py-4">
+                    <span className="text-sm text-gray-900">{feature.name}</span>
+                    
+                  </div>
+                  {/* Check/dash for each plan */}
+                  {planData.map((plan,) => (
+                    <div
+                      key={plan.name + feature.key}
+                      className={`flex items-center justify-center border-t border-r last:border-r-0 border-slate-200 bg-white px-6 py-4`}
+                    >
+                     {plan.information[rowIdx]  }
+                    </div>
+                  ))}
+                </>
+              ))}
+
               {/* Key Features Title Row */}
-              <div className="flex items-center border-t border-r border-slate-200 bg-white px-6 py-4">
+              <div className="flex items-center border-t border-r border-slate-200 bg-slate-50 px-6 py-4">
                 <span className="text-sm font-semibold text-gray-900">Key Features</span>
               </div>
               {planData.map((_, idx) => (
-                <div key={idx + '-features-title'} className="border-t border-r last:border-r-0 border-slate-200 bg-white px-6 py-4"></div>
+                <div key={idx + '-features-title'} className="border-t border-r last:border-r-0 border-slate-200 bg-slate-50 px-6 py-4"></div>
               ))}
               {/* Features Rows */}
               {features.map((feature, rowIdx) => (
@@ -109,7 +165,7 @@ export function PricingTable_building2() {
                     </Tooltip>
                   </div>
                   {/* Check/dash for each plan */}
-                  {planData.map((plan, colIdx) => (
+                  {planData.map((plan,) => (
                     <div
                       key={plan.name + feature.key}
                       className={`flex items-center justify-center border-t border-r last:border-r-0 border-slate-200 bg-white px-6 py-4`}
@@ -123,12 +179,39 @@ export function PricingTable_building2() {
                   ))}
                 </>
               ))}
+
+              {/* Fee Services Title Row */}
+              <div className="flex items-center border-t border-r border-slate-200 bg-slate-50 px-6 py-4">
+                <span className="text-sm font-semibold text-gray-900">Phí dịch vụ</span>
+              </div>
+              {planData.map((_, idx) => (
+                <div key={idx + '-information-title'} className="border-t border-r last:border-r-0 border-slate-200 bg-slate-50 px-6 py-4"></div>
+              ))}
+              {/* Fee Services Rows */}
+              {feeServices.map((fee, rowIdx) => (
+                <>
+                  {/* Feature label + info icon */}
+                  <div key={fee.key} className="flex items-center gap-2 border-t border-r border-slate-200 bg-white px-6 py-4">
+                    <span className="text-sm text-gray-900">{fee.name}</span>
+                    
+                  </div>
+                  {/* Check/dash for each plan */}
+                  {planData.map((plan,) => (
+                    <div
+                      key={plan.name + fee.key}
+                      className={`flex items-center justify-center border-t border-r last:border-r-0 border-slate-200 bg-white px-6 py-4`}
+                    >
+                     {plan.feeServices[rowIdx]  }
+                    </div>
+                  ))}
+                </>
+              ))}              
             </div>
           </TooltipProvider>
         </div>
         {/* Mobile Vertical Cards */}
         <div className="md:hidden flex flex-col gap-8">
-          {planData.map((plan, idx) => (
+          {planData.map((plan,) => (
             <div
               key={plan.name}
               className={`border border-slate-200 rounded-xl bg-white shadow-sm ${plan.recommended ? 'shadow-lg border-2 border-slate-900' : ''}`}
@@ -137,7 +220,7 @@ export function PricingTable_building2() {
                 <span className="text-base font-bold text-gray-900 uppercase tracking-wide mb-1">{plan.name}</span>
                 <span className="text-sm text-gray-500 text-center mb-4">{plan.description}</span>
                 <div className="flex items-end mb-2">
-                  <span className="text-4xl font-extrabold text-gray-900">{plan.price[billing] === 0 ? '$0' : `$${plan.price[billing]}`}</span>
+                  <span className="text-4xl font-extrabold text-gray-900">{plan.price[billing]}</span>
                   <span className="text-base text-gray-400 ml-1 pb-1">{priceUnit}</span>
                 </div>
               </div>
@@ -167,14 +250,30 @@ export function PricingTable_building2() {
                     </div>
                   ))}
                 </div>
-                <Button className="w-full bg-black text-white rounded-md mt-6 hover:opacity-90 transition-opacity" size="lg">
-                  Get Started
-                </Button>
+                <ContactButton onClick={() => setOpenContact(true)} />
               </div>
             </div>
           ))}
         </div>
       </div>
+      <ContactDialog open={openContact} onOpenChange={setOpenContact} />
+
     </section>
   )
 } 
+interface ContactButtonProps {
+  className?: string;
+  onClick: () => void;
+}
+
+function ContactButton({ className, onClick }: ContactButtonProps) {
+  return (
+    <Button 
+      size="lg" 
+      className={`w-full bg-black text-white hover:bg-slate-100 mt-4 ${className || ''}`}
+      onClick={onClick}
+    >
+      Liên hệ
+    </Button>
+  );
+}

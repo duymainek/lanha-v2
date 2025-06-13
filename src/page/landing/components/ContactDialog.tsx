@@ -21,7 +21,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
         <div className="flex flex-col gap-4 mt-4">
           <Button
             asChild
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-base flex items-center gap-2 justify-center"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base flex items-center gap-2 justify-center"
             size="lg"
           >
             <a href="tel:0777460408">
@@ -30,7 +30,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
           </Button>
           <Button
             asChild
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white text-base flex items-center gap-2 justify-center"
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base flex items-center gap-2 justify-center"
             size="lg"
           >
             <a href="https://zalo.me/0777460408" target="_blank" rel="noopener noreferrer">
@@ -41,4 +41,4 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

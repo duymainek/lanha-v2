@@ -37,7 +37,7 @@ export function Hero() {
             whileTap={{ scale: 0.95 }}
           >
             <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100" onClick={() => setOpenContact(true)}>
-              Liên hệ
+              Liên hệ ngay
             </Button>
           </motion.div>
         </motion.div>

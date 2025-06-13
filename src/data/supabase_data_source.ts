@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import type { Room, SupabaseBuilding, SupabaseInvoiceRaw, UtilityReading, SupabaseTenant, Tenant, BuildingExpense, NotificationQueueItem, RoomDetailData, User } from './types';
+import type { Room, SupabaseBuilding, SupabaseInvoiceRaw, UtilityReading, SupabaseTenant, Tenant, BuildingExpense, NotificationQueueItem, RoomDetailData } from './types';
 import { SupabaseCacheService } from '@/services/SupabaseCacheService';
 
 /**

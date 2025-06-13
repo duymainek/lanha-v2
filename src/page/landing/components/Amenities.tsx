@@ -14,7 +14,6 @@ const amenities = [
     items: [
       "Camera 24/7",
       "Khóa vân tay",
-      "Bảo vệ trực 24/7"
     ]
   },
   {
@@ -22,7 +21,6 @@ const amenities = [
     icon: HomeIcon,
     items: [
       "Chỗ để xe",
-      "Máy giặt & Máy sấy",
       "Sân thượng chung"
     ]
   },
@@ -30,18 +28,16 @@ const amenities = [
     category: "Internet",
     icon: WifiIcon,
     items: [
-      "Wifi tốc độ cao",
+      "Wifi tốc độ cao 1000Mbps",
       "Hỗ trợ kỹ thuật 24/7",
-      "Miễn phí"
     ]
   },
   {
     category: "Chi phí",
     icon: CurrencyDollarIcon,
     items: [
-      "Điện: 4.000đ/kWh",
-      "Nước: 100.000đ/người",
-      "Internet: Miễn phí"
+      "Điện: 3.8k/kWh",
+      "Nước: 80.000đ/người",
     ]
   }
 ]
