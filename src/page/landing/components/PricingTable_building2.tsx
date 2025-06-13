@@ -37,7 +37,7 @@ const planData = [
   {
     name: 'PRIVATE',
     description: 'Căn hộ có lối đi riêng, đầy đủ tiện nghi cơ bản',
-    price: { monthly: '3.7M', annual: '3.3M' },
+    price: { sixMonths: '3.7M', year: '3.3M' },
     information: ['1 phòng ngủ', '50m2', '1 tháng', '1 tháng'],
     features: [true, true, true, true, true, true, true, true, false, true, false, ],
     feeServices: ['3.8k/kw', '80.000đ','Chia theo người ở'],
@@ -45,7 +45,7 @@ const planData = [
   {
     name: 'STUDIO',
     description: 'Căn hộ studio với sân thượng riêng',
-    price: { monthly: '3.5M', annual: '3M' },
+    price: { sixMonths: '3.5M', year: '3M' },
     information: ['Studio', '30m2', '1 tháng', '1 tháng'],
     features: [true, true, true, true, false, false, false, false, true, true, true, ],
     recommended: false,
@@ -55,7 +55,7 @@ const planData = [
     name: 'STANDARD',
     recommended: true,
     description: 'Căn hộ 1 phòng ngủ với ban công',
-    price: { monthly: '5M', annual: '4.5M' },
+    price: { sixMonths: '5M', year: '4.5M' },
     information: ['1 phòng ngủ', '60m2', '1 tháng', '1 tháng'],
     features: [true, true, true, true, true, true, true, true, true, true, true, ],
     feeServices: ['3.8k/kw', '80.000đ','Chia theo người ở'],
@@ -65,11 +65,11 @@ const planData = [
 export function PricingTable_building2() {
   const [openContact, setOpenContact] = useState(false)
 
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly')
-  const priceUnit = billing === 'monthly' ? '/month' : '/year'
+  const [billing, setBilling] = useState<'sixMonths' | 'year'>('year')
+  const priceUnit = billing === 'sixMonths' ? '/tháng' : '/tháng'
 
   return (
-    <section className="w-full bg-white py-20">
+    <section className="w-full bg-white py-20" id="apartments2">
       <div className="max-w-5xl mx-auto px-2 sm:px-">
         {/* Heading */}
         <div className="mb-12 text-center">
@@ -79,15 +79,16 @@ export function PricingTable_building2() {
           </p>
         </div>
         {/* Toggle */}
-        <div className="flex justify-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <span className="text-lg font-semibold text-gray-900">Thời hạn hợp đồng:</span>
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${billing === 'annual' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>6 tháng</span>
+            <span className={`text-sm ${billing === 'sixMonths' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>6 tháng</span>
             <Switch
-              checked={billing === 'monthly'}
-              onCheckedChange={(checked: boolean) => setBilling(checked ? 'monthly' : 'annual')}
+              checked={billing === 'year'}
+              onCheckedChange={(checked: boolean) => setBilling(checked ? 'year' : 'sixMonths')}
               className="data-[state=checked]:bg-slate-900"
             />
-            <span className={`text-sm ${billing === 'monthly' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>12 tháng</span>
+            <span className={`text-sm ${billing === 'year' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>12 tháng</span>
           </div>
         </div>
         {/* Desktop Grid */}

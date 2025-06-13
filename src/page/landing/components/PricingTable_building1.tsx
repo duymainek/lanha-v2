@@ -61,11 +61,11 @@ const planData = [
 
 export function PricingTable_building1() {
   const [openContact, setOpenContact] = useState(false)
-  const [billing, setBilling] = useState<'sixMonths' | 'year'>('sixMonths')
-  const priceUnit = billing === 'sixMonths' ? '/6 months' : '/year'
+  const [billing, setBilling] = useState<'sixMonths' | 'year'>('year')
+  const priceUnit = billing === 'sixMonths' ? '/tháng' : '/tháng'
 
   return (
-    <section className="w-full bg-white py-20">
+    <section className="w-full bg-white py-20" id="apartments1">
       <div className="max-w-5xl mx-auto px-2 sm:px-">
         {/* Heading */}
         <div className="mb-12 text-center">
@@ -75,12 +75,13 @@ export function PricingTable_building1() {
           </p>
         </div>
         {/* Toggle */}
-        <div className="flex justify-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <span className="text-lg font-semibold text-gray-900">Thời hạn hợp đồng:</span>
           <div className="flex items-center gap-2">
-            <span className={`text-sm ${billing === 'year' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>6 tháng</span>
+            <span className={`text-sm ${billing === 'sixMonths' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>6 tháng</span>
             <Switch
-              checked={billing === 'sixMonths'}
-              onCheckedChange={(checked: boolean) => setBilling(checked ? 'sixMonths' : 'year')}
+              checked={billing === 'year'}
+              onCheckedChange={(checked: boolean) => setBilling(checked ? 'year' : 'sixMonths')}
               className="data-[state=checked]:bg-slate-900"
             />
             <span className={`text-sm ${billing === 'year' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>12 tháng</span>

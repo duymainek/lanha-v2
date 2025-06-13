@@ -6,7 +6,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ContactDialog } from './ContactDialog'
 
 const navigation = [
-  { name: 'Căn Hộ', href: '#apartments' },
+  { name: 'Nguyễn Quý Anh', href: '#apartments1' },
+  { name: 'Nguyễn Đình Chiểu', href: '#apartments2' },
   { name: 'Tiện Ích', href: '#amenities' },
 ]
 
