@@ -9,11 +9,13 @@ import RoomDetailPage from "./app/page/rooms/[roomId]";
 import TenantsPage from "./app/page/tenants";
 import SettingPage from "./app/page/setting";
 import LoginPage from "./page/login";
+import LandingPage from "./page/landing";
 
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/buildings" element={<BuildingsPage />} />
       <Route path="/expenses" element={<ExpensesPage />} />
