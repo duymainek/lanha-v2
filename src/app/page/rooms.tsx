@@ -180,6 +180,7 @@ export default function RoomsPage() {
                 data={filteredData}
                 rowKey={row => row.id}
                 actions={rowActions}
+                onRowClick={handleView}
               />
             )}
           </div>

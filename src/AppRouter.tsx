@@ -11,6 +11,9 @@ import SettingPage from "./app/page/setting";
 import LoginPage from "./page/login";
 import LandingPage from "./page/landing";
 import SearchInvoicePage from "./page/search-invoice";
+import InvoiceCreatePage from "./app/page/invoice-create";
+import InvoiceDetailPage from "./app/page/invoice-detail";
+import InvoiceEditPage from "./app/page/invoice-edit";
 
 export default function AppRouter() {
   return (
@@ -27,6 +30,9 @@ export default function AppRouter() {
       <Route path="/tenants" element={<TenantsPage />} />
       <Route path="/setting" element={<SettingPage />} />
       <Route path="/search-invoice" element={<SearchInvoicePage />} />
+      <Route path="/invoice-create" element={<InvoiceCreatePage />} />
+      <Route path="/invoice/:id" element={<InvoiceDetailPage />} />
+      <Route path="/invoice-edit/:id" element={<InvoiceEditPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

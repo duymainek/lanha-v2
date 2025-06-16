@@ -4,16 +4,20 @@ import { Bars3Icon } from '@heroicons/react/24/outline'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ContactDialog } from './ContactDialog'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const navigation = [
   { name: 'Nguyễn Quý Anh', href: '#apartments1' },
   { name: 'Nguyễn Đình Chiểu', href: '#apartments2' },
   { name: 'Tiện Ích', href: '#amenities' },
+  { name: 'Tra cứu hóa đơn', href: '/search-invoice', isExternal: true },
 ]
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [openContact, setOpenContact] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +26,20 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Handler cho navigation item
+  const handleNavClick = (href: string, e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, isExternal?: boolean) => {
+    if (isExternal) {
+      e.preventDefault();
+      navigate(href);
+      return;
+    }
+    if (location.pathname !== '/') {
+      e.preventDefault()
+      navigate('/' + href)
+    }
+    // Nếu đang ở '/', để anchor hoạt động bình thường (scroll)
+  }
 
   return (
     <>
@@ -42,7 +60,7 @@ export function Navbar() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <a href="#" className="text-2xl font-bold">
+              <a href="/" className="text-2xl font-bold">
                 Là Nhà
               </a>
             </motion.div>
@@ -56,6 +74,7 @@ export function Navbar() {
                   className="text-slate-600 hover:text-slate-900 px-3 py-2 text-sm font-medium"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={e => handleNavClick(item.href, e, item.isExternal)}
                 >
                   {item.name}
                 </motion.a>
@@ -86,6 +105,7 @@ export function Navbar() {
                           key={item.name}
                           href={item.href}
                           className="block px-3 py-2 text-base font-medium text-slate-900"
+                          onClick={e => handleNavClick(item.href, e, item.isExternal)}
                         >
                           {item.name}
                         </a>

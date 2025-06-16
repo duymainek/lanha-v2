@@ -142,13 +142,11 @@ export function TablePro<T extends object>({
               pagedData.map((row, rowIndex) => (
                 <TableRow
                   key={rowKey(row)}
-                  onClick={e => {
-                    if (
-                      (e.target as HTMLElement).closest('button, [role=checkbox], .action-cell')
-                    ) return
-                    onRowClick && onRowClick(row)
+                  onClick={() => {
+                    if (onRowClick) {
+                      onRowClick(row)
+                    }
                   }}
-                  className={onRowClick ? 'cursor-pointer' : ''}
                 >
                   {selectable && (
                     <TableCell>

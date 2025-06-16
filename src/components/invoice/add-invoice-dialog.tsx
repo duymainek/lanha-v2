@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { handleInvoiceSave } from "@/forms/invoice-form-utils"
+import { InvoiceZNSPreview } from "@/components/invoice/invoice-zns-preview"
 
 export interface InvoiceForm {
   apartment_id: number | null
@@ -266,212 +267,236 @@ export function AddInvoiceDialog({
       onOpenChange(o);
     }}>
       <DialogContent
-        className="w-[78vw] max-w-none max-h-[80vh] flex flex-col px-12 py-8"
-        style={{ width: '78vw', maxWidth: '78vw',  margin: '0 auto', borderRadius: 16 }}
+        className="w-[90vw] max-w-none max-h-[90vh] flex flex-col px-6 py-6"
+        style={{ width: '90vw', maxWidth: '90vw', margin: '0 auto', borderRadius: 16 }}
       >
         <DialogHeader>
           <DialogTitle>Add Invoice</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto py-2 hide-scrollbar">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-              <label className="block text-sm font-medium mb-1">Apartment</label>
-              <Select value={form.apartment_id ? String(form.apartment_id) : ""} onValueChange={v => handleApartmentChange(Number(v))} >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roomOptions.map((opt: RoomOption) => (
-                    <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Cột trái: Form nhập liệu */}
+          <div className="flex-1 min-w-[340px] max-w-2xl overflow-y-auto hide-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>
-                <label className="block text-sm font-medium mb-1">Invoice Number</label>
-                <Input value={form.invoice_number} readOnly />
+                <label className="block text-sm font-medium mb-1">Apartment</label>
+                <Select value={form.apartment_id ? String(form.apartment_id) : ""} onValueChange={v => handleApartmentChange(Number(v))} >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select room" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roomOptions.map((opt: RoomOption) => (
+                      <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-5 gap-4 md:col-span-2">
-              <div className="col-span-1">
-                <label className="block text-sm font-medium mb-1">Issue Date</label>
-                <Input type="date" value={form.issue_date} onChange={e => handleIssueDateChange(e.target.value)} />
-              </div>
-              <div className="col-span-1">
-                <label className="block text-sm font-medium mb-1">Due Date</label>
-                <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
-              </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium mb-1">Tenant</label>
-                <div className="h-9 flex items-center px-3 bg-muted rounded border border-input text-base">{form.tenant_id ? tenantOptions.find((t: TenantOption) => t.value === form.tenant_id)?.label || "" : ""}</div>
-              </div>
-            </div>
-          </div>
-          {loadingRoom ? (
-            <div className="flex flex-col gap-6 my-8">
-              <Skeleton className="h-8 w-1/3 mb-2" />
-              <Skeleton className="h-32 w-full mb-2" />
-              <Skeleton className="h-8 w-1/4 mb-2" />
-              <Skeleton className="h-32 w-full mb-2" />
-              <Skeleton className="h-8 w-1/4 mb-2" />
-              <Skeleton className="h-20 w-full mb-2" />
-            </div>
-          ) : (
-            <>
-              <div className="mb-8">
-                <div className="mb-4">
-                  <div className="font-semibold mb-1">Rent</div>
-                  <table className="min-w-full border border-border-color rounded-lg bg-white">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Type</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Description</th>
-                        <th className="px-4 py-2 text-center text-xs font-semibold uppercase">Quantity</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold uppercase">Unit Price</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold uppercase">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.items.filter(i => i.item_type === 'rent').map((item, idx) => (
-                        <tr key={idx} className="border-t border-border-color">
-                          <td className="px-4 py-2 text-sm">{item.item_type}</td>
-                          <td className="px-4 py-2 text-sm">
-                            {item.description}
-                          </td>
-                          <td className="px-4 py-2 text-center text-sm">
-                            {item.quantity}
-                          </td>
-                          <td className="px-4 py-2 text-right text-sm">
-                            {formatToVND(item.unit_price)}
-                          </td>
-                          <td className="px-4 py-2 text-right text-sm font-semibold">
-                            {formatToVND(item.total)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Invoice Number</label>
+                  <Input value={form.invoice_number} readOnly />
                 </div>
-                <div className="mb-4">
-                  <div className="font-semibold mb-1">Additional Items</div>
-                  <table className="min-w-full border border-border-color rounded-lg bg-white">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Type</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Description</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Prev</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Current</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Quantity</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Unit Price</th>
-                        <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Total</th>
-                        <th className="px-2 py-2 text-center"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.items
-                        .map((item, idx) => ({ item, idx }))
-                        .filter(({ item }) => item.item_type !== 'rent')
-                        .map(({ item, idx }) => (
+              </div>
+              <div className="grid grid-cols-5 gap-4 md:col-span-2">
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium mb-1">Issue Date</label>
+                  <Input type="date" value={form.issue_date} onChange={e => handleIssueDateChange(e.target.value)} />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium mb-1">Due Date</label>
+                  <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+                </div>
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium mb-1">Tenant</label>
+                  <div className="h-9 flex items-center px-3 bg-muted rounded border border-input text-base">{form.tenant_id ? tenantOptions.find((t: TenantOption) => t.value === form.tenant_id)?.label || "" : ""}</div>
+                </div>
+              </div>
+            </div>
+            {loadingRoom ? (
+              <div className="flex flex-col gap-6 my-8">
+                <Skeleton className="h-8 w-1/3 mb-2" />
+                <Skeleton className="h-32 w-full mb-2" />
+                <Skeleton className="h-8 w-1/4 mb-2" />
+                <Skeleton className="h-32 w-full mb-2" />
+                <Skeleton className="h-8 w-1/4 mb-2" />
+                <Skeleton className="h-20 w-full mb-2" />
+              </div>
+            ) : (
+              <>
+                <div className="mb-8">
+                  <div className="mb-4">
+                    <div className="font-semibold mb-1">Rent</div>
+                    <table className="min-w-full border border-border-color rounded-lg bg-white">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Type</th>
+                          <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Description</th>
+                          <th className="px-4 py-2 text-center text-xs font-semibold uppercase">Quantity</th>
+                          <th className="px-4 py-2 text-right text-xs font-semibold uppercase">Unit Price</th>
+                          <th className="px-4 py-2 text-right text-xs font-semibold uppercase">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {form.items.filter(i => i.item_type === 'rent').map((item, idx) => (
                           <tr key={idx} className="border-t border-border-color">
-                            <td className="px-4 py-2 text-sm text-center">{item.item_type}</td>
-                            <td className="px-4 py-2 text-sm text-center">{item.description}</td>
-                            <td className="px-4 py-2 text-sm text-center">
-                              {(item.item_type === 'electricity') ? (
-                                <Input 
-                                  type="number" 
-                                  value={item.previous_reading ?? ''} 
-                                  onChange={e => handleItemChange(idx, 'previous_reading', Number(e.target.value))} 
-                                  className="h-7 text-xs w-24 mx-auto text-center" 
-                                />
-                              ) : ''}
+                            <td className="px-4 py-2 text-sm">{item.item_type}</td>
+                            <td className="px-4 py-2 text-sm">
+                              {item.description}
                             </td>
-                            <td className="px-4 py-2 text-sm text-center">
-                              {(item.item_type === 'electricity' ) ? (
-                                <Input 
-                                  type="number" 
-                                  value={item.current_reading ?? ''} 
-                                  onChange={e => handleItemChange(idx, 'current_reading', Number(e.target.value))} 
-                                  className="h-7 text-xs w-24 mx-auto text-center" 
-                                />
-                              ) : ''}
+                            <td className="px-4 py-2 text-center text-sm">
+                              {item.quantity}
                             </td>
-                            <td className="px-4 py-2 text-sm text-center">
-                              {(item.item_type === 'water') ? (
-                                <Input 
-                                  type="number" 
-                                  value={item.quantity} 
-                                  min={0} 
-                                  onChange={e => handleItemChange(idx, 'quantity', Number(e.target.value))} 
-                                  className="h-7 text-xs w-24 mx-auto text-center" 
-                                />
-                              ) : item.quantity}
-                            </td>
-                            <td className="px-4 py-2 text-sm text-center">
+                            <td className="px-4 py-2 text-right text-sm">
                               {formatToVND(item.unit_price)}
                             </td>
-                            <td className="px-4 py-2 text-sm text-center font-semibold">{formatToVND(item.total)}</td>
-                            <td className="px-2 py-2 text-center">
-                              {(item.item_type === 'service' || item.item_type === 'other') && (
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(idx)}><span className="text-red-500">✕</span></Button>
-                              )}
+                            <td className="px-4 py-2 text-right text-sm font-semibold">
+                              {formatToVND(item.total)}
                             </td>
                           </tr>
                         ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="border-t border-border-color pt-4 mt-4 mb-6">
-                <div className="font-semibold mb-2">Additional Charges</div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Additional Fees</label>
-                    <Input type="number" value={form.additional_fees ?? 0} min={0} onChange={e => {
-                      setForm(f => {
-                        const newForm = { ...f, additional_fees: Number(e.target.value) };
-                        newForm.total = newForm.subtotal + newForm.additional_fees - (newForm.discounts ?? 0);
-                        newForm.total = newForm.subtotal + newForm.additional_fees - (newForm.discounts ?? 0);
-                        return newForm;
-                      });
-                    }} />
+                      </tbody>
+                    </table>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Discounts</label>
-                    <Input type="number" value={form.discounts ?? 0} min={0} onChange={e => {
-                      setForm(f => {
-                        const newForm = { ...f, discounts: Number(e.target.value) };
-                        newForm.total = newForm.subtotal + (newForm.additional_fees ?? 0) - (newForm.discounts ?? 0);
-                        return newForm;
-                      });
-                    }} />
+                  <div className="mb-4">
+                    <div className="font-semibold mb-1">Additional Items</div>
+                    <table className="min-w-full border border-border-color rounded-lg bg-white">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Type</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Description</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Prev</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Current</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Quantity</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Unit Price</th>
+                          <th className="px-4 py-2 text-xs font-semibold uppercase text-center">Total</th>
+                          <th className="px-2 py-2 text-center"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {form.items
+                          .map((item, idx) => ({ item, idx }))
+                          .filter(({ item }) => item.item_type !== 'rent')
+                          .map(({ item, idx }) => (
+                            <tr key={idx} className="border-t border-border-color">
+                              <td className="px-4 py-2 text-sm text-center">{item.item_type}</td>
+                              <td className="px-4 py-2 text-sm text-center">{item.description}</td>
+                              <td className="px-4 py-2 text-sm text-center">
+                                {(item.item_type === 'electricity') ? (
+                                  <Input 
+                                    type="number" 
+                                    value={item.previous_reading ?? ''} 
+                                    onChange={e => handleItemChange(idx, 'previous_reading', Number(e.target.value))} 
+                                    className="h-7 text-xs w-24 mx-auto text-center" 
+                                  />
+                                ) : ''}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-center">
+                                {(item.item_type === 'electricity' ) ? (
+                                  <Input 
+                                    type="number" 
+                                    value={item.current_reading ?? ''} 
+                                    onChange={e => handleItemChange(idx, 'current_reading', Number(e.target.value))} 
+                                    className="h-7 text-xs w-24 mx-auto text-center" 
+                                  />
+                                ) : ''}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-center">
+                                {(item.item_type === 'water') ? (
+                                  <Input 
+                                    type="number" 
+                                    value={item.quantity} 
+                                    min={0} 
+                                    onChange={e => handleItemChange(idx, 'quantity', Number(e.target.value))} 
+                                    className="h-7 text-xs w-24 mx-auto text-center" 
+                                  />
+                                ) : item.quantity}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-center">
+                                {formatToVND(item.unit_price)}
+                              </td>
+                              <td className="px-4 py-2 text-sm text-center font-semibold">{formatToVND(item.total)}</td>
+                              <td className="px-2 py-2 text-center">
+                                {(item.item_type === 'service' || item.item_type === 'other') && (
+                                  <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(idx)}><span className="text-red-500">✕</span></Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              </div>
-              <div className="md:col-span-2 mt-4 mb-8">
-                <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea className="w-full border rounded-md p-2 min-h-[48px] text-sm" placeholder="Add any additional notes here..." value={form.notes ?? ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-              </div>
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 border-t border-border-color pt-4">
-                <div className="flex flex-col items-start">
-                  <div className="text-sm text-muted-foreground">Subtotal</div>
-                  <div className="text-lg font-semibold">{formatToVND(form.subtotal)}</div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="text-base">Total <span className="font-bold">{formatToVND(form.total)}</span></div>
-                  <div className="flex flex-row gap-2 mt-2">
-                    <DialogClose asChild>
-                      <Button type="button" variant="outline" onClick={() => { resetForm(); if (onCancel) onCancel(); }}>Cancel</Button>
-                    </DialogClose>
-                    <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
-                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Add Invoice
-                    </Button>
+                <div className="border-t border-border-color pt-4 mt-4 mb-6">
+                  <div className="font-semibold mb-2">Additional Charges</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Additional Fees</label>
+                      <Input type="number" value={form.additional_fees ?? 0} min={0} onChange={e => {
+                        setForm(f => {
+                          const newForm = { ...f, additional_fees: Number(e.target.value) };
+                          newForm.total = newForm.subtotal + newForm.additional_fees - (newForm.discounts ?? 0);
+                          newForm.total = newForm.subtotal + newForm.additional_fees - (newForm.discounts ?? 0);
+                          return newForm;
+                        });
+                      }} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Discounts</label>
+                      <Input type="number" value={form.discounts ?? 0} min={0} onChange={e => {
+                        setForm(f => {
+                          const newForm = { ...f, discounts: Number(e.target.value) };
+                          newForm.total = newForm.subtotal + (newForm.additional_fees ?? 0) - (newForm.discounts ?? 0);
+                          return newForm;
+                        });
+                      }} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
+                <div className="md:col-span-2 mt-4 mb-8">
+                  <label className="block text-sm font-medium mb-1">Notes</label>
+                  <textarea className="w-full border rounded-md p-2 min-h-[48px] text-sm" placeholder="Add any additional notes here..." value={form.notes ?? ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+                </div>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 border-t border-border-color pt-4">
+                  <div className="flex flex-col items-start">
+                    <div className="text-sm text-muted-foreground">Subtotal</div>
+                    <div className="text-lg font-semibold">{formatToVND(form.subtotal)}</div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <div className="text-base">Total <span className="font-bold">{formatToVND(form.total)}</span></div>
+                    <div className="flex flex-row gap-2 mt-2">
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline" onClick={() => { resetForm(); if (onCancel) onCancel(); }}>Cancel</Button>
+                      </DialogClose>
+                      <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Add Invoice
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          {/* Cột phải: Preview Zalo ZNS */}
+          <div className="flex-1 min-w-[340px] max-w-md">
+            <InvoiceZNSPreview
+              customerName={form.tenant_id ? (tenantOptions.find(t => t.value === form.tenant_id)?.label || "N/a") : "N/a"}
+              contractCode={form.invoice_number || "N/a"}
+              roomAddress={(() => {
+                const room = roomOptions.find(r => r.value === form.apartment_id)?.room;
+                return room ? `${room.building?.name || ''} - ${room.unit_number}` : "N/a";
+              })()}
+              electricity={form.items.find(i => i.item_type === 'electricity')?.total ?? null}
+              water={form.items.find(i => i.item_type === 'water')?.total ?? null}
+              additionalFee={form.additional_fees ?? null}
+              discount={form.discounts ?? null}
+              rent={form.items.find(i => i.item_type === 'rent')?.total ?? null}
+              total={form.total ?? null}
+              transferContent={(() => {
+                const room = roomOptions.find(r => r.value === form.apartment_id)?.room;
+                return room ? `Thanh toan hoa don phong ${room.unit_number}` : "N/a";
+              })()}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

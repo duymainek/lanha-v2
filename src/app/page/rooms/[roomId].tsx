@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -19,7 +19,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { handleTenantSave } from "@/forms/tenant-form-utils"
 import { removeTenantFromSupabase, fetchTenantsFromSupabase, updateTenantInSupabase } from "@/data/supabase_data_source"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ViewInvoiceDialog } from "@/forms/invoice-form-utils"
 import { fetchRoomsFromSupabase } from "@/data/supabase_data_source"
 
 
@@ -67,6 +66,7 @@ export default function RoomDetailPage() {
 }
 
 function RoomDetailPanel({ data }: { data: RoomDetailData }) {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<'tenants' | 'invoices'>('tenants')
   const [openSheet, setOpenSheet] = useState(false)
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
@@ -78,23 +78,7 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
   const [allTenants, setAllTenants] = useState<Tenant[]>([])
   const [selectedTenantId, setSelectedTenantId] = useState<string>("")
   const [isLinking, setIsLinking] = useState(false)
-  const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
-  const [viewingInvoice, setViewingInvoice] = useState<SupabaseInvoiceRaw | null>(null)
-  const [roomOptions, setRoomOptions] = useState<{ label: string; value: number; room: Room }[]>([])
-  const [tenantOptions, setTenantOptions] = useState<{ label: string; value: string; tenant: Tenant }[]>([])
-
-  useEffect(() => {
-    // Fetch room/tenant options song song
-    const fetchOptions = async () => {
-      const [rooms, tenants] = await Promise.all([
-        fetchRoomsFromSupabase(),
-        fetchTenantsFromSupabase()
-      ])
-      setRoomOptions(rooms.map(r => ({ label: `${r.building?.name || ''} - ${r.unit_number}`, value: r.id, room: r })))
-      setTenantOptions(tenants.map(t => ({ label: t.full_name, value: t.id, tenant: t })))
-    }
-    fetchOptions()
-  }, [])
+  
 
   // Helper
   const getStatusColor = (status?: string) => {
@@ -437,8 +421,7 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
                         type="button"
                         onClick={e => {
                           e.stopPropagation();
-                          setViewingInvoice(row)
-                          setOpenInvoiceDialog(true)
+                          navigate(`/invoice/${row.id}`)
                         }}
                       >
                         {row.invoice_number}
@@ -463,13 +446,7 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
                   rowKey={row => row.id}
                   selectable={false}
                 />
-                <ViewInvoiceDialog
-                  open={openInvoiceDialog}
-                  onOpenChange={setOpenInvoiceDialog}
-                  invoice={viewingInvoice || (null as unknown as SupabaseInvoiceRaw)}
-                  roomOptions={roomOptions}
-                  tenantOptions={tenantOptions}
-                />
+                
               </>
             )}
           </div>

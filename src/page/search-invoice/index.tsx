@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Navbar } from "@/page/landing/components/Navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { InvoiceDetailView } from "@/forms/invoice-form-utils";
 import { getInvoiceDetailByNumber, fetchRoomsFromSupabase, fetchTenantsFromSupabase } from "@/data/supabase_data_source";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { InvoiceDetailView } from "@/app/page/invoice-detail";
 
 export default function SearchInvoicePage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -97,7 +97,7 @@ export default function SearchInvoicePage() {
                 invoice={invoice}
                 roomOptions={roomOptions}
                 tenantOptions={tenantOptions}
-                showCopyPrint={true}
+                showCloseButton={true}
               />
             </div>
           )}

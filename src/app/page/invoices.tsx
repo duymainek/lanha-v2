@@ -6,16 +6,14 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { IconDotsVertical, IconPlus } from "@tabler/icons-react"
 import { useEffect, useState } from "react"
-import { fetchInvoicesFromSupabase, fetchRoomsFromSupabase, fetchTenantsFromSupabase, removeInvoiceFromSupabase, updateInvoiceStatusInSupabase } from "@/data/supabase_data_source"
-import { AddInvoiceDialog } from "@/components/invoice/add-invoice-dialog"
-import { EditInvoiceDialog } from "@/components/invoice/edit-invoice-dialog"
+import { fetchInvoicesFromSupabase, fetchRoomsFromSupabase, removeInvoiceFromSupabase, updateInvoiceStatusInSupabase } from "@/data/supabase_data_source"
 import { toast } from "sonner"
 import { formatToVND } from "@/utils/currency_utils"
 import { formatDateToDDMMYYYY } from "@/utils/date_utils"
-import type { SupabaseInvoiceRaw, Room, Tenant, InvoiceItem } from "@/data/types"
+import type { SupabaseInvoiceRaw, Room } from "@/data/types"
 import { Badge } from "@/components/ui/badge"
 import FilterDropdown from "@/components/ui/filter-dropdown"
-import { ViewInvoiceDialog } from "@/forms/invoice-form-utils"
+import { useNavigate } from "react-router-dom"
 
 function InvoiceStatusBadge({ status }: { status: string }) {
   let color = "";
@@ -37,27 +35,21 @@ function InvoiceStatusBadge({ status }: { status: string }) {
 }
 
 export default function InvoicesPage() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState<SupabaseInvoiceRaw[]>([])
   const [loading, setLoading] = useState(true)
-  const [openAddDialog, setOpenAddDialog] = useState(false)
-  const [openEditDialog, setOpenEditDialog] = useState(false)
-  const [editingInvoice, setEditingInvoice] = useState<SupabaseInvoiceRaw | null>(null)
   const [roomOptions, setRoomOptions] = useState<{ label: string; value: number; room: Room }[]>([])
-  const [tenantOptions, setTenantOptions] = useState<{ label: string; value: string; tenant: Tenant }[]>([])
   const [selectedRoom, setSelectedRoom] = useState<string[]>(["all"])
   const [selectedStatus, setSelectedStatus] = useState<string[]>(["all"])
-  const [openViewDialog, setOpenViewDialog] = useState(false)
-  const [viewingInvoice, setViewingInvoice] = useState<SupabaseInvoiceRaw | null>(null)
 
   // Fetch data
   useEffect(() => {
     async function fetchData() {
       setLoading(true)
       try {
-        const [inv, rooms, tenants] = await Promise.all([
+        const [inv, rooms] = await Promise.all([
           fetchInvoicesFromSupabase(),
           fetchRoomsFromSupabase(),
-          fetchTenantsFromSupabase(),
         ])
 
         setInvoices(inv)
@@ -66,13 +58,6 @@ export default function InvoicesPage() {
             label: `${room.building?.name || ''} - ${room.unit_number}`,
             value: room.id,
             room,
-          }))
-        )
-        setTenantOptions(
-          tenants.map((tenant: Tenant) => ({
-            label: tenant.full_name,
-            value: tenant.id,
-            tenant,
           }))
         )
       } catch (err) {
@@ -104,13 +89,10 @@ export default function InvoicesPage() {
 
   // Actions
   const handleEdit = (row: SupabaseInvoiceRaw) => {
-    setEditingInvoice(row)
-    console.log(row)
-    setOpenEditDialog(true)
+    navigate(`/invoice-edit/${row.id}`);
   }
   const handleAdd = () => {
-    setEditingInvoice(null)
-    setOpenAddDialog(true)
+    navigate("/invoice-create");
   }
   const handleDelete = async (row: SupabaseInvoiceRaw) => {
     if (!window.confirm('Are you sure you want to delete this invoice?')) return
@@ -133,6 +115,12 @@ export default function InvoicesPage() {
       toast("Không thể cập nhật trạng thái hóa đơn", { description: err instanceof Error ? err.message : "Unknown error" })
     }
   }
+  const handleView = (row: SupabaseInvoiceRaw) => {
+    // Lấy 10 hóa đơn gần nhất theo issue_date (mới nhất)
+    const sorted = [...invoices].sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
+    const top10 = sorted.slice(0, 10);
+    navigate(`/invoice/${row.id}`, { state: { recentInvoices: top10 } });
+  }
   const rowActions = (row: SupabaseInvoiceRaw) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -146,12 +134,12 @@ export default function InvoicesPage() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <DropdownMenuItem onClick={() => { console.log('row', row); setViewingInvoice(row); setOpenViewDialog(true); }}>View</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => { handleView(row); }}>View</DropdownMenuItem>
+        {row.status !== 'paid' && <DropdownMenuItem onClick={() => handleEdit(row)}>Edit</DropdownMenuItem>}
         {row.status !== 'paid' && (
           <DropdownMenuItem onClick={() => handleMarkPaid(row)} className="text-green-600">Mark Paid</DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={() => handleDelete(row)} className="text-red-600">Delete</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleEdit(row)}>Edit</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -222,71 +210,12 @@ export default function InvoicesPage() {
                 data={filteredData}
                 rowKey={row => row.id}
                 actions={rowActions}
+                onRowClick={handleView}
                 onRemoveSelected={handleRemoveSelected}
               />
             )}
           </div>
         </div>
-        {/* Dialog add invoice */}
-        <AddInvoiceDialog
-          open={openAddDialog}
-          onOpenChange={setOpenAddDialog}
-          onSubmit={async () => {
-            try {
-              const data = await fetchInvoicesFromSupabase()
-              setInvoices(data)
-              setOpenAddDialog(false)
-              setOpenEditDialog(false)
-            } catch (err) {
-              toast("Failed to refresh invoices", { description: err instanceof Error ? err.message : "Unknown error" })
-            }
-          }}
-          roomOptions={roomOptions}
-          tenantOptions={tenantOptions}
-        />
-        {/* Dialog edit invoice */}
-        {editingInvoice && (
-          <EditInvoiceDialog
-            open={openEditDialog}
-            onOpenChange={setOpenEditDialog}
-            initialInvoice={{
-              apartment_id: editingInvoice.apartment_id ?? null,
-              tenant_id: editingInvoice.tenant_id ?? null,
-              issue_date: editingInvoice.issue_date,
-              due_date: editingInvoice.due_date,
-              invoice_number: editingInvoice.invoice_number,
-              status: editingInvoice.status,
-              items: (editingInvoice.invoice_items as InvoiceItem[]) ?? [],
-              additional_fees: editingInvoice.additional_fees ?? 0,
-              discounts: editingInvoice.discounts ?? 0,
-              notes: editingInvoice.notes ?? '',
-              total: editingInvoice.total ?? 0,
-              subtotal: editingInvoice.subtotal ?? 0,
-            }}
-            onSubmit={async () => {
-              try {
-                const data = await fetchInvoicesFromSupabase()
-                setInvoices(data)
-              } catch (err) {
-                toast("Failed to refresh invoices", { description: err instanceof Error ? err.message : "Unknown error" })
-              }
-              setOpenAddDialog(false)
-              setOpenEditDialog(false)
-            }}
-            roomOptions={roomOptions}
-            tenantOptions={tenantOptions}
-          />
-        )}
-        {/* Dialog view invoice */}
-        {viewingInvoice && (
-          <ViewInvoiceDialog
-            open={openViewDialog}
-            onOpenChange={(open) => { setOpenViewDialog(open); if (!open) setViewingInvoice(null); }}
-            invoice={viewingInvoice}
-            roomOptions={roomOptions}
-            tenantOptions={tenantOptions}
-          />
-        )}
       </SidebarInset>
     </SidebarProvider>
   )

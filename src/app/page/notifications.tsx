@@ -9,12 +9,12 @@ import { EditSheet } from "@/components/ui/edit-sheet"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { fetchNotificationsFromSupabase, updateNotificationInSupabase } from "@/data/supabase_data_source"
-import type { NotificationQueueItem, SupabaseInvoiceRaw } from "@/data/types"
+import type { NotificationQueueItem } from "@/data/types"
 import FilterDropdown from "@/components/ui/filter-dropdown"
-import { ViewInvoiceDialog } from "@/forms/invoice-form-utils"
-import { fetchRoomsFromSupabase, fetchTenantsFromSupabase } from "@/data/supabase_data_source"
+import { useNavigate } from "react-router-dom"
 
 export default function NotificationsPage() {
+  const navigate = useNavigate()
   const [data, setData] = useState<NotificationQueueItem[]>([])
   const [openSheet, setOpenSheet] = useState(false)
   const [editingNotification, setEditingNotification] = useState<NotificationQueueItem | null>(null)
@@ -26,10 +26,6 @@ export default function NotificationsPage() {
   const [zaloToken, setZaloToken] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [selectedRows, setSelectedRows] = useState<NotificationQueueItem[]>([])
-  const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
-  const [viewingInvoice, setViewingInvoice] = useState<SupabaseInvoiceRaw | null>(null)
-  const [roomOptions, setRoomOptions] = useState<any[]>([])
-  const [tenantOptions, setTenantOptions] = useState<any[]>([])
 
   // Memoize options for FilterDropdown
   const statusOptions = useMemo(() => [
@@ -48,13 +44,6 @@ export default function NotificationsPage() {
       try {
         const notifications = await fetchNotificationsFromSupabase()
         setData(notifications)
-        // Fetch room/tenant options song song
-        const [rooms, tenants] = await Promise.all([
-          fetchRoomsFromSupabase(),
-          fetchTenantsFromSupabase()
-        ])
-        setRoomOptions(rooms.map(r => ({ label: `${r.building?.name || ''} - ${r.unit_number}`, value: r.id, room: r })))
-        setTenantOptions(tenants.map(t => ({ label: t.full_name, value: t.id, tenant: t })))
       } catch (err) {
         toast("Failed to load notifications", { description: err instanceof Error ? err.message : "Unknown error" })
       }
@@ -228,8 +217,7 @@ export default function NotificationsPage() {
                     onClick={e => {
                       e.stopPropagation();
                       if (row.invoice) {
-                        setViewingInvoice(row.invoice)
-                        setOpenInvoiceDialog(true)
+                        navigate(`/invoice/${row.invoice.id}`)
                       }
                     }}
                   >
@@ -305,13 +293,6 @@ export default function NotificationsPage() {
                 </div>
               </DialogContent>
             </Dialog>
-            <ViewInvoiceDialog
-              open={openInvoiceDialog}
-              onOpenChange={setOpenInvoiceDialog}
-              invoice={viewingInvoice || (null as unknown as SupabaseInvoiceRaw)}
-              roomOptions={roomOptions}
-              tenantOptions={tenantOptions}
-            />
           </div>
         </div>
       </SidebarInset>
