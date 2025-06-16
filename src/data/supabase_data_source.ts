@@ -662,3 +662,34 @@ export async function login(username: string, password: string): Promise<boolean
  if (!data || data.length === 0) return false;
  return true;
 }
+
+/**
+ * Lấy chi tiết hóa đơn theo invoice_number
+ * @param {string} invoiceNumber - Số hóa đơn
+ * @returns {Promise<SupabaseInvoiceRaw | null>} - Chi tiết hóa đơn hoặc null nếu không tìm thấy
+ */
+export async function getInvoiceDetailByNumber(invoiceNumber: string): Promise<SupabaseInvoiceRaw | null> {
+  const { data: invoices, error } = await supabase
+    .from('invoices')
+    .select(`
+      *,
+      tenants:tenant_id (id, apartment_id, full_name, email, phone, nationality, id_number, move_in_date, move_out_date, is_primary, tenant_type, created_at),
+      invoice_items!fk_invoice_items_invoice_id (id, invoice_id, item_type, description, quantity, unit_price, total, previous_reading, current_reading, discount, created_at),
+      apartments:apartment_id (
+        id, unit_number, building_id, area, price,
+        buildings:building_id (id, name, address)
+      )
+    `)
+    .eq('invoice_number', invoiceNumber)
+    .limit(1);
+  if (error) throw new Error(error.message);
+  if (!invoices || invoices.length === 0) return null;
+  const inv = invoices[0];
+  // Map tenants về object hoặc null, giữ nguyên id là số
+  const mapped = {
+    ...inv,
+    tenants: Array.isArray(inv.tenants) ? (inv.tenants.length > 0 ? inv.tenants[0] : null) : inv.tenants,
+    buildings: Array.isArray(inv.apartments?.buildings) ? (inv.apartments.buildings.length > 0 ? inv.apartments.buildings[0] : null) : inv.apartments?.buildings,
+  };
+  return mapped;
+}

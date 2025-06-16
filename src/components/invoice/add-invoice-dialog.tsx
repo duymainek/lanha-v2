@@ -51,10 +51,11 @@ interface AddInvoiceDialogProps {
 }
 
 function genInvoiceNumber(room: RoomWithTenants | undefined, issueDate: string): string {
+  // `INV-${month}-${year}-${room.building_id}-${room.id}-${random(0,999)}`
   if (!room || !issueDate) return '';
   const month = String(new Date(issueDate).getMonth() + 1).padStart(2, '0');
   const year = String(new Date(issueDate).getFullYear()).slice(-2);
-  return `INV-${month}-${year}-${room.building_id}-${room.id}`;
+  return `INV-${month}-${year}-${room.building_id}-${room.id}-${Math.floor(Math.random() * 1000)}`;
 }
 
 export function AddInvoiceDialog({

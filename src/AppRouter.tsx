@@ -10,6 +10,7 @@ import TenantsPage from "./app/page/tenants";
 import SettingPage from "./app/page/setting";
 import LoginPage from "./page/login";
 import LandingPage from "./page/landing";
+import SearchInvoicePage from "./page/search-invoice";
 
 export default function AppRouter() {
   return (
@@ -25,6 +26,7 @@ export default function AppRouter() {
       <Route path="/rooms/:roomId" element={<RoomDetailPage />} />
       <Route path="/tenants" element={<TenantsPage />} />
       <Route path="/setting" element={<SettingPage />} />
+      <Route path="/search-invoice" element={<SearchInvoicePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
