@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import type { Room, Tenant, InvoiceItem } from "@/data/types";
 import {  IconPlus, IconX } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom"
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RoomOption {
   label: string;
@@ -29,6 +30,7 @@ export default function InvoiceCreatePage() {
   const [roomOptions, setRoomOptions] = useState<RoomOption[]>([]);
   const [tenantOptions, setTenantOptions] = useState<TenantOption[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLastInvoice, setIsLastInvoice] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
@@ -241,6 +243,42 @@ export default function InvoiceCreatePage() {
     }));
   };
 
+  // Helper: get current room
+  const getCurrentRoom = () => {
+    return roomOptions.find((r) => r.value === form.apartment_id)?.room;
+  };
+
+  // Handle Last Invoice switch
+  const handleLastInvoiceChange = (checked: boolean) => {
+    setIsLastInvoice(checked);
+    setForm((f) => {
+      let items = [...f.items];
+      if (checked) {
+        // Remove rent item
+        items = items.filter((item) => item.item_type !== "rent");
+      } else {
+        // Add rent item back if not exist
+        const room = getCurrentRoom();
+        if (room && !items.some((item) => item.item_type === "rent")) {
+          const rentItem = {
+            id: 0,
+            invoice_id: 0,
+            item_type: "rent",
+            description: "Rent",
+            quantity: 1,
+            unit_price: room.price || 0,
+            total: room.price || 0,
+          };
+          items = [rentItem, ...items];
+        }
+      }
+      // Recalculate total
+      const subtotal = items.reduce((sum, i) => sum + (i.total || 0), 0);
+      const total = subtotal + (f.additional_fees || 0) - (f.discount || 0);
+      return { ...f, items, total, rent: items.find(i => i.item_type === 'rent')?.total || 0 };
+    });
+  };
+
   return (
     <SidebarProvider
       style={{
@@ -292,6 +330,10 @@ export default function InvoiceCreatePage() {
                         <label className="block text-sm font-medium mb-1">Due Date</label>
                         <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Checkbox id="last-invoice" checked={isLastInvoice} onCheckedChange={handleLastInvoiceChange} />
+                      <label htmlFor="last-invoice" className="text-sm font-medium select-none cursor-pointer">Last Invoice</label>
                     </div>
                     <div className="mb-4">
                       <div className="font-semibold mb-1">Invoice Items</div>
