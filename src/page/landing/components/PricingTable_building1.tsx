@@ -42,7 +42,7 @@ const planData = [
   {
     name: 'STANDARD',
     description: 'Căn hộ có đầy đủ tiện nghi, giá cả phải chăng',
-    price: { sixMonths: '4.9M', year: '5.3M' },
+    price: { sixMonths: '5.3M', year: '4.9M' },
     information: ['1 phòng ngủ', '45m2', '1 tháng', '1 tháng'],
     features: [true, true, true, true, true, true, true, true, true, true, true, true,true,false, false],
     recommended: true,
