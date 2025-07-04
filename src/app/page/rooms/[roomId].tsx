@@ -5,7 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getRoomDetail } from "@/data/supabase_data_source"
-import type { RoomDetailData, SupabaseInvoiceRaw, Room, Tenant } from "@/data/types"
+import type { RoomDetailData, Tenant } from "@/data/types"
 import { Calendar, MoreHorizontal } from 'lucide-react';
 import { formatDateToDDMMYYYY, } from "@/utils/date_utils"
 import { formatToVND } from "@/utils/currency_utils"
@@ -19,7 +19,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { handleTenantSave } from "@/forms/tenant-form-utils"
 import { removeTenantFromSupabase, fetchTenantsFromSupabase, updateTenantInSupabase } from "@/data/supabase_data_source"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { fetchRoomsFromSupabase } from "@/data/supabase_data_source"
 
 
 export default function RoomDetailPage() {
