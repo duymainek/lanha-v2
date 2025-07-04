@@ -97,7 +97,6 @@ export default function SearchInvoicePage() {
                 invoice={invoice}
                 roomOptions={roomOptions}
                 tenantOptions={tenantOptions}
-                showCloseButton={true}
               />
             </div>
           )}

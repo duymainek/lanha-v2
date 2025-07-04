@@ -19,6 +19,7 @@ import {
 import { useEffect, useState } from "react"
 import { fetchBuildingExpenses, fetchBuildingsFromSupabase, fetchInvoicesFromSupabase } from "@/data/supabase_data_source"
 import { Skeleton } from "../ui/skeleton"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select"
 
 export const description = "An interactive area chart"
 
@@ -37,8 +38,11 @@ export function ElectricityRevenueExpensesChart() {
   }>>([])
 
   const [chartConfig, setChartConfig] = useState<ChartConfig>({})
+  const [buildings, setBuildings] = useState<Array<{ id: number, name: string }>>([])
+  const [buildingShortNames, setBuildingShortNames] = useState<string[]>([])
+  const [selectedBuilding, setSelectedBuilding] = useState<string>("all")
 
-useEffect(() => {
+  useEffect(() => {
     async function fetchExpenseChartData() {
       // Lấy invoices đã thanh toán 12 tháng gần nhất
       const [allInvoices, expenses] = await Promise.all([
@@ -47,6 +51,10 @@ useEffect(() => {
       ]);
       // Lấy danh sách tòa nhà
       const buildings = await fetchBuildingsFromSupabase();
+      setBuildings(buildings);
+      const buildingNames = buildings.map(b => b.name);
+      const buildingShortNames = buildingNames.map(name => name.split(/\s+/).map(w => w[0]?.toUpperCase() || '').join(''));
+      setBuildingShortNames(buildingShortNames);
       // Tạo mảng 12 tháng gần nhất
       const months = Array.from({ length: 12 }, (_, i) => {
         const d = new Date();
@@ -55,8 +63,6 @@ useEffect(() => {
       });
       // Lấy tất cả buildingId và tên rút gọn
       const buildingIds = buildings.map(b => b.id);
-      const buildingNames = buildings.map(b => b.name);
-      const buildingShortNames = buildingNames.map(name => name.split(/\s+/).map(w => w[0]?.toUpperCase() || '').join(''));
       // Group revenue điện theo building và tháng
       // Map: { [buildingId]: { [month]: total } }
       const revenueByBuilding: Record<number, Record<string, number>> = {};
@@ -136,8 +142,23 @@ useEffect(() => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Electricity Revenue and Expenses</CardTitle>
-        <CardDescription>Last 12 months</CardDescription>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <CardTitle>Electricity Revenue and Expenses</CardTitle>
+            <CardDescription>Last 12 months</CardDescription>
+          </div>
+          <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Select building" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {buildings.map((b, idx) => (
+                <SelectItem key={b.id} value={buildingShortNames[idx]}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
@@ -163,6 +184,7 @@ useEffect(() => {
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
            {Object.keys(chartConfig)
              .filter(key => chartData.some(item => key in item))
+             .filter(key => selectedBuilding === "all" || key.startsWith(selectedBuilding))
              .map((key) => (
                <Line
                  key={key}
@@ -179,15 +201,23 @@ useEffect(() => {
         <div className="flex flex-wrap gap-2 px-4 pb-1">
           {Object.keys(chartConfig)
             .filter(key => chartData.some(item => key in item))
-            .map((key) => (
-              <div key={key} className="flex items-center gap-1">
-                <span
-                  className="inline-block w-3 h-1.5 rounded"
-                  style={{ background: chartConfig[key]?.theme?.light || 'var(--color-building1)' }}
-                />
-                <small className="text-muted-foreground text-xs">{chartConfig[key]?.label}</small>
+            .filter(key => selectedBuilding === "all" || key.startsWith(selectedBuilding))
+            .map((key) => {
+              let label = chartConfig[key]?.label;
+              if (selectedBuilding !== "all") {
+                if (key.endsWith("_revenue")) label = "Revenue";
+                else if (key.endsWith("_expense")) label = "Expense";
+              }
+              return (
+                <div key={key} className="flex items-center gap-1">
+                  <span
+                    className="inline-block w-3 h-1.5 rounded"
+                    style={{ background: chartConfig[key]?.theme?.light || 'var(--color-building1)' }}
+                  />
+                  <small className="text-muted-foreground text-xs">{label}</small>
                 </div>
-              ))}
+              )
+            })}
           </div>
         </div>
       </CardContent>
