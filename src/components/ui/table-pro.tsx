@@ -110,6 +110,10 @@ export function TablePro<T extends object>({
   const setPageIndex = (idx: number) => setPage((p) => ({ ...p, pageIndex: idx }))
   const setPageSize = (size: number) => setPage({ pageIndex: 0, pageSize: size })
 
+  function hasAmountField(obj: unknown): obj is { amount: number } {
+    return typeof obj === 'object' && obj !== null && 'amount' in obj && typeof (obj as { amount?: unknown }).amount === 'number';
+  }
+
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-lg border">
@@ -188,6 +192,14 @@ export function TablePro<T extends object>({
           {selectable && (
             <span className="text-muted-foreground hidden text-sm lg:inline-block">
               {selectedIds.length} of {data.length} row(s) selected.
+              {selectedIds.length > 0 && (
+                (() => {
+                  const total = data
+                    .filter(row => selectedIds.includes(rowKey(row)))
+                    .reduce((sum, row) => sum + (hasAmountField(row) ? row.amount : 0), 0);
+                  return ` | Sum = ${total.toLocaleString()}`;
+                })()
+              )}
             </span>
           )}
           {selectable && selectedIds.length > 0 && onRemoveSelected && (

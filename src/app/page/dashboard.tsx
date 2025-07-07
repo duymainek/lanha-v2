@@ -11,6 +11,8 @@ import { WaterRevenueExpensesChart } from "@/components/dashboard/water_revenue_
 import { RevenueSection } from "@/components/dashboard/section-cards"
 import { ChartRevenueByBuildings } from "@/components/dashboard/chart-area-interactive"
 import { QuickCreateSheet } from "@/components/quick-create-sheet"
+import { ChartNetRevenue } from "@/components/dashboard/chart-net-revenue"
+import { ChartNetByBuildings } from "@/components/dashboard/chart-net-by-buildings"
 
 export default function DashboardPage() {
   return (
@@ -35,6 +37,7 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="lg:col-span-2">
                       <ChartRevenueByBuildings />
+                     
                     </div>
                     <div className="lg:col-span-1">
                       <UnpaidInvoiceSection />
@@ -50,6 +53,12 @@ export default function DashboardPage() {
                       <WaterRevenueExpensesChart />
                     </div>
                   </div>
+                </div>
+                <div className="px-4 lg:px-6">
+                  <ChartNetByBuildings />
+                </div>
+                <div className="px-4 lg:px-6">
+                  <ChartNetRevenue />
                 </div>
               </div>
             </div>

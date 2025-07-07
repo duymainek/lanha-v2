@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { ExpenseTypeManager } from "@/components/expense-type-manager"
 
 export default function SettingPage() {
   return (
@@ -24,6 +25,7 @@ export default function SettingPage() {
                 <div className="text-muted-foreground">Cài đặt sẽ hiển thị ở đây.</div>
               </CardContent>
             </Card>
+            <ExpenseTypeManager />
           </div>
         </div>
       </SidebarInset>

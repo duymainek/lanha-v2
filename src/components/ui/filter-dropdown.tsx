@@ -77,11 +77,7 @@ export function FilterDropdown({
 
   React.useEffect(() => {
     if (onChange) {
-      if (selected.length === 0) {
-        onChange(["all"])
-      } else {
-        onChange(selected)
-      }
+      onChange(selected)
     }
     // eslint-disable-next-line
   }, [selected])

@@ -7,33 +7,27 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { IconDotsVertical } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
-import { fetchBuildingExpenses, fetchBuildingsFromSupabase, removeBuildingExpense } from "@/data/supabase_data_source"
+import { useEffect, useState, useMemo } from "react"
+import { fetchBuildingExpenses, fetchBuildingsFromSupabase, removeBuildingExpense, fetchExpenseTypes } from "@/data/supabase_data_source"
 import type { BuildingExpense, SupabaseBuilding } from "@/data/types"
 import { toast } from "sonner"
 import FilterDropdown from "@/components/ui/filter-dropdown"
 import { getExpenseFields, handleExpenseSave } from "@/forms/expense-form-utils"
 
-const EXPENSE_TYPES = [
-  { value: "water", label: "Water" },
-  { value: "electricity", label: "Electricity" },
-]
-
 function ExpenseTypeBadge({ type }: { type: string }) {
+  // Tìm loại chi phí theo name, gán màu động nếu muốn
+  const lower = type.toLowerCase();
   let color = "";
   let label = type;
-  switch (type) {
-    case "water":
-      color = "bg-blue-100 text-blue-700 border-blue-200";
-      label = "Water";
-      break;
-    case "electricity":
-      color = "bg-yellow-100 text-yellow-700 border-yellow-200";
-      label = "Electricity";
-      break;
-    default:
-      color = "bg-gray-100 text-gray-700 border-gray-200";
-      label = type;
+  if (lower === "water") {
+    color = "bg-blue-100 text-blue-700 border-blue-200";
+    label = "Water";
+  } else if (lower === "electricity") {
+    color = "bg-yellow-100 text-yellow-700 border-yellow-200";
+    label = "Electricity";
+  } else {
+    color = "bg-gray-100 text-gray-700 border-gray-200";
+    label = type;
   }
   return <Badge className={color + " px-2 py-1 border"}>{label}</Badge>;
 }
@@ -47,17 +41,22 @@ export default function ExpensesPage() {
   const [selectedBuilding, setSelectedBuilding] = useState<string[]>(["all"])
   const [buildingList, setBuildingList] = useState<SupabaseBuilding[]>([])
   const [expenseType, setExpenseType] = useState<string[]>(["all"])
+  const [expenseTypes, setExpenseTypes] = useState<{id: string, name: string}[]>([])
+  const [selectedMonth, setSelectedMonth] = useState<string[]>([])
+  const [selectedRowIds, setSelectedRowIds] = useState<(string | number)[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
-        const [expenses, buildings] = await Promise.all([
+        const [expenses, buildings, types] = await Promise.all([
           fetchBuildingExpenses(),
           fetchBuildingsFromSupabase(),
+          fetchExpenseTypes(),
         ])
         setExpenses(expenses)
         setBuildingList(buildings)
+        setExpenseTypes(types)
       } catch (err) {
         toast("Failed to fetch expenses", { description: err instanceof Error ? err.message : "Unknown error" })
       } finally {
@@ -73,9 +72,7 @@ export default function ExpensesPage() {
     { label: "Type", accessor: "expense_type" as keyof BuildingExpense, render: (row: BuildingExpense) => <ExpenseTypeBadge type={row.expense_type} /> },
     { label: "Building", accessor: "building.name" as keyof BuildingExpense, render: (row: BuildingExpense) => row.building?.name },
     { label: "Note", accessor: "note" as keyof BuildingExpense },
-  
   ]
-
 
   const rowActions = (row: BuildingExpense) => (
     <DropdownMenu>
@@ -128,18 +125,27 @@ export default function ExpensesPage() {
     }
   }
 
+  // Danh sách tháng yyyy-mm từ expenses (không có option All)
+  const monthOptions = useMemo(() => {
+    const months = Array.from(new Set(expenses.map(e => e.created_at?.slice(0, 7)).filter(Boolean)))
+      .sort((a, b) => (a && b ? b.localeCompare(a) : 0));
+    return months.map(m => ({ value: m!, label: m!, checked: selectedMonth.includes(m!) }));
+  }, [expenses, selectedMonth])
+
   // Filtered data
   const filteredData = expenses.filter(exp => {
-    const matchBuilding = selectedBuilding.includes("all") || selectedBuilding.includes(String(exp.building?.id))
-    const matchType = expenseType.includes("all") || expenseType.includes(exp.expense_type)
-    return matchBuilding && matchType
+    const matchBuilding = selectedBuilding.length === 0 || selectedBuilding.includes("all") || selectedBuilding.includes(String(exp.building?.id))
+    const matchType = expenseType.length === 0 || expenseType.includes("all") || expenseType.includes(exp.expense_type)
+    const matchMonth = selectedMonth.length === 0 || selectedMonth.includes(exp.created_at?.slice(0, 7) || "")
+    return matchBuilding && matchType && matchMonth
   })
 
   // EditSheet fields
-  const getFields = (expense: BuildingExpense | null) => getExpenseFields(expense, buildingList)
+  const getFields = (expense: BuildingExpense | null) => getExpenseFields(expense, buildingList, expenseTypes)
 
   const handleSave = async (values: Record<string, string>) => {
     setIsSaving(true)
+
     await handleExpenseSave(
       values,
       editingExpense ? "edit" : "add",
@@ -155,6 +161,16 @@ export default function ExpensesPage() {
     )
     setIsSaving(false)
   }
+
+  // Handler cho TablePro
+  const handleRowSelectChange = (ids: (string | number)[]) => {
+    setSelectedRowIds(ids)
+  }
+
+  // Tính tổng amount các record được chọn
+  const totalSelectedAmount = filteredData
+    .filter(row => selectedRowIds.includes(row.id))
+    .reduce((sum, row) => sum + (row.amount || 0), 0)
 
   return (
     <SidebarProvider
@@ -176,17 +192,19 @@ export default function ExpensesPage() {
             </div>
             <div className="flex flex-row gap-4 items-center mb-2">
               <FilterDropdown
-                options={
-                  buildingList.map(b => ({ value: String(b.id), label: b.name, checked: selectedBuilding.includes(String(b.id)) }))
-                }
+                options={buildingList.map(b => ({ value: String(b.id), label: b.name, checked: selectedBuilding.includes(String(b.id)) }))}
                 buttonLabel="Buildings"
                 onChange={setSelectedBuilding}
               />
-              {/* FilterDropdown cho loại chi phí */}
               <FilterDropdown
-                options={EXPENSE_TYPES.map(opt => ({ ...opt, checked: expenseType.includes(opt.value) }))}
+                options={expenseTypes.map(opt => ({ value: opt.name, label: opt.name, checked: expenseType.includes(opt.name) }))}
                 buttonLabel="Expense"
                 onChange={setExpenseType}
+              />
+              <FilterDropdown
+                options={monthOptions}
+                buttonLabel="Date"
+                onChange={setSelectedMonth}
               />
             </div>
             {loading ? (
@@ -196,14 +214,22 @@ export default function ExpensesPage() {
                 </div>
               </div>
             ) : (
-              <TablePro
-                columns={columns}
-                data={filteredData}
-                rowKey={row => row.id}
-                actions={rowActions}
-                selectable
-                onRemoveSelected={handleRemoveSelected}
-              />
+              <>
+                <TablePro
+                  columns={columns}
+                  data={filteredData}
+                  rowKey={row => row.id}
+                  actions={rowActions}
+                  selectable
+                  onRemoveSelected={handleRemoveSelected}
+                  onRowSelectChange={handleRowSelectChange}
+                />
+                {selectedRowIds.length > 0 && (
+                  <div className="mt-2 text-right font-semibold">
+                    Total amount: {totalSelectedAmount.toLocaleString()}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

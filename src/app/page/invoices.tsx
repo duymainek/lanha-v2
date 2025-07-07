@@ -186,7 +186,13 @@ export default function InvoicesPage() {
                   checked: selectedRoom.includes(String(opt.value)),
                 }))}
                 buttonLabel="Room"
-                onChange={setSelectedRoom}
+                onChange={(vals) => {
+                  if (!vals || vals.length === 0) {
+                    setSelectedRoom(['all']);
+                  } else {
+                    setSelectedRoom(vals);
+                  }
+                }}
               />
               <FilterDropdown
                 options={[
@@ -195,7 +201,13 @@ export default function InvoicesPage() {
                   { value: "unpaid", label: "Unpaid", checked: selectedStatus.includes("unpaid") },
                 ]}
                 buttonLabel="Status"
-                onChange={setSelectedStatus}
+                onChange={(vals) => {
+                  if (!vals || vals.length === 0) {
+                    setSelectedStatus(['all']);
+                  } else {
+                    setSelectedStatus(vals);
+                  }
+                }}
               />
             </div>
             {loading ? (

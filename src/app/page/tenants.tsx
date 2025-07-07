@@ -207,7 +207,10 @@ export default function TenantsPage() {
                   <FilterDropdown
                     options={optionsBuilding}
                     buttonLabel="Buildings"
-                    onChange={vals => setSelectedBuilding((vals as string[]).filter(v => typeof v === 'string'))}
+                    onChange={vals => {
+                      if (!vals || vals.length === 0) setSelectedBuilding(['all']);
+                      else setSelectedBuilding((vals as string[]).filter(v => typeof v === 'string'));
+                    }}
                   />
                   <FilterDropdown
                     options={[
@@ -215,7 +218,10 @@ export default function TenantsPage() {
                       { value: "dependent", label: "Dependent", checked: selectedType.includes("dependent") },
                     ]}
                     buttonLabel="Type"
-                    onChange={setSelectedType}
+                    onChange={vals => {
+                      if (!vals || vals.length === 0) setSelectedType(['all']);
+                      else setSelectedType(vals);
+                    }}
                   />
                    <FilterDropdown
                     options={[
@@ -223,7 +229,10 @@ export default function TenantsPage() {
                       { value: "inactive", label: "Inactive", checked: selectedType.includes("inactive") },
                     ]}
                     buttonLabel="Status"
-                    onChange={setSelectedStatus}
+                    onChange={vals => {
+                      if (!vals || vals.length === 0) setSelectedStatus(['all']);
+                      else setSelectedStatus(vals);
+                    }}
                   />
                 </div>
               </div>

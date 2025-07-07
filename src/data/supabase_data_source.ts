@@ -476,19 +476,21 @@ export async function getRevenueByBuildingId12Month(): Promise<Record<string, { 
 }
 
 /**
- * Fetch all building expenses, join with buildings
+ * Fetch all building expenses, join with buildings và expense_types
  * @returns {Promise<BuildingExpense[]>}
  */
 export async function fetchBuildingExpenses(): Promise<BuildingExpense[]> {
   return SupabaseCacheService.get('building_expenses', async () => {
     const { data, error } = await supabase
       .from('building_expenses')
-      .select(`*, buildings:building_id (id, name, address)`)
+      .select(`*, buildings:building_id (id, name, address), expense_types:expense_id (id, name)`)
       .order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
     return (data || []).map((item: any) => ({
       ...item,
       building: item.buildings || null,
+      expense_id: item.expense_id,
+      expense_type: item.expense_types?.name || null,
     }));
   });
 }
@@ -502,13 +504,15 @@ export async function addBuildingExpense(data: Partial<BuildingExpense>): Promis
   const { data: inserted, error } = await supabase
     .from('building_expenses')
     .insert([data])
-    .select('*, buildings:building_id (id, name, address)');
+    .select('*, buildings:building_id (id, name, address), expense_types:expense_id (id, name)');
   if (error) throw new Error(error.message);
   if (!inserted || inserted.length === 0) throw new Error('Insert failed');
   SupabaseCacheService.clear('building_expenses');
   return {
     ...inserted[0],
     building: inserted[0].buildings || null,
+    expense_id: inserted[0].expense_id,
+    expense_type: inserted[0].expense_types?.name || null,
   };
 }
 
@@ -523,13 +527,15 @@ export async function updateBuildingExpense(id: number, data: Partial<BuildingEx
     .from('building_expenses')
     .update(data)
     .eq('id', id)
-    .select('*, buildings:building_id (id, name, address)');
+    .select('*, buildings:building_id (id, name, address), expense_types:expense_id (id, name)');
   if (error) throw new Error(error.message);
   if (!updated || updated.length === 0) throw new Error('Not found or not updated');
   SupabaseCacheService.clear('building_expenses');
   return {
     ...updated[0],
     building: updated[0].buildings || null,
+    expense_id: updated[0].expense_id,
+    expense_type: updated[0].expense_types?.name || null,
   };
 }
 
@@ -692,4 +698,144 @@ export async function getInvoiceDetailByNumber(invoiceNumber: string): Promise<S
     buildings: Array.isArray(inv.apartments?.buildings) ? (inv.apartments.buildings.length > 0 ? inv.apartments.buildings[0] : null) : inv.apartments?.buildings,
   };
   return mapped;
+}
+
+/**
+ * Thêm mới loại chi phí (expense_type)
+ * @param {string} name
+ * @returns {Promise<{id: string, name: string}>}
+ */
+export async function addExpenseType(name: string): Promise<{id: string, name: string}> {
+  const { data, error } = await supabase
+    .from('expense_types')
+    .insert([{ name }])
+    .select();
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error('Insert failed');
+  SupabaseCacheService.clear('expense_types');
+  return data[0];
+}
+
+/**
+ * Update an expense type
+ * @param {string} id
+ * @param {string} name
+ * @returns {Promise<{id: string, name: string}>}
+ */
+export async function updateExpenseType(id: string, name: string): Promise<{id: string, name: string}> {
+  const { data, error } = await supabase
+    .from('expense_types')
+    .update({ name })
+    .eq('id', id)
+    .select();
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error('Update failed');
+  SupabaseCacheService.clear('expense_types');
+  return data[0];
+}
+
+/**
+ * Remove an expense type
+ * @param {string} id
+ * @returns {Promise<boolean>}
+ */
+export async function removeExpenseType(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('expense_types')
+    .delete()
+    .eq('id', id);
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('expense_types');
+  return true;
+}
+
+/**
+ * Fetch all expense types
+ * @returns {Promise<{id: string, name: string}[]>}
+ */
+export async function fetchExpenseTypes(): Promise<{id: string, name: string}[]> {
+  const { data, error } = await supabase
+    .from('expense_types')
+    .select('id, name')
+    .order('name', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+/**
+ * Lấy net revenue (doanh thu - chi phí) 12 tháng gần nhất, key là yyyy-mm
+ * @returns {Promise<Record<string, number>>}
+ */
+export async function getMonthlyNetRevenueLast12Months(): Promise<Record<string, number>> {
+  // 1. Lấy revenue từng tháng
+  const revenueByMonth = await getMonthlyRevenueLast12Months();
+
+  // 2. Lấy expenses toàn bộ, group theo tháng
+  const expenses = await fetchBuildingExpenses();
+  // Chuẩn hóa expenses theo tháng yyyy-mm
+  const expensesByMonth: Record<string, number> = {};
+  expenses.forEach(exp => {
+    const d = new Date(exp.created_at);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    if (!expensesByMonth[key]) expensesByMonth[key] = 0;
+    expensesByMonth[key] += exp.amount || 0;
+  });
+
+  // 3. Tạo mảng 12 tháng gần nhất
+  const now = new Date();
+  const months: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    months.unshift(key);
+  }
+
+  // 4. Tính net revenue cho từng tháng
+  const result: Record<string, number> = {};
+  months.forEach(key => {
+    const revenue = revenueByMonth[key] || 0;
+    const expense = expensesByMonth[key] || 0;
+    result[key] = revenue - expense;
+  });
+  return result;
+}
+
+/**
+ * Lấy net revenue (doanh thu - chi phí) 12 tháng gần nhất theo từng buildingId, trả về kèm tên building
+ * @returns {Promise<Record<string, { name: string, net: Record<string, number> }>>}
+ */
+export async function getNetByBuildingId12Month(): Promise<Record<string, { name: string, net: Record<string, number> }>> {
+  // 1. Lấy revenue từng building theo tháng
+  const revenueByBuilding = await getRevenueByBuildingId12Month(); // { buildingId: { name, revenue: { yyyy-mm: number } } }
+  // 2. Lấy expenses toàn bộ, group theo building và tháng
+  const expenses = await fetchBuildingExpenses();
+  // Gom expenses theo buildingId và tháng
+  const expensesByBuilding: Record<string, Record<string, number>> = {};
+  expenses.forEach(exp => {
+    const d = new Date(exp.created_at);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    const buildingId = String(exp.building_id);
+    if (!expensesByBuilding[buildingId]) expensesByBuilding[buildingId] = {};
+    if (!expensesByBuilding[buildingId][key]) expensesByBuilding[buildingId][key] = 0;
+    expensesByBuilding[buildingId][key] += exp.amount || 0;
+  });
+  // 3. Tạo mảng 12 tháng gần nhất
+  const now = new Date();
+  const months: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    months.unshift(key);
+  }
+  // 4. Tính net revenue cho từng building, từng tháng
+  const result: Record<string, { name: string, net: Record<string, number> }> = {};
+  Object.entries(revenueByBuilding).forEach(([buildingId, { name, revenue }]) => {
+    result[buildingId] = { name, net: {} };
+    months.forEach(key => {
+      const rev = revenue[key] || 0;
+      const exp = (expensesByBuilding[buildingId] && expensesByBuilding[buildingId][key]) || 0;
+      result[buildingId].net[key] = rev - exp;
+    });
+  });
+  return result;
 }

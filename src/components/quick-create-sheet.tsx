@@ -5,13 +5,12 @@ import type { QuickCreateSheetState } from "@/services/QuickCreateService"
 import { getTenantFields, handleTenantSave } from "@/forms/tenant-form-utils"
 import { fetchRoomsFromSupabase, fetchBuildingsFromSupabase, fetchTenantsFromSupabase } from "@/data/supabase_data_source"
 import type { Room, SupabaseBuilding, Tenant } from "@/data/types"
-import { getExpenseFields, handleExpenseSave } from "@/forms/expense-form-utils"
 import { AddInvoiceDialog } from "@/components/invoice/add-invoice-dialog"
 
 export function QuickCreateSheet() {
   const [state, setState] = useState<QuickCreateSheetState>({ open: false })
   const [roomList, setRoomList] = useState<Room[]>([])
-  const [buildingList, setBuildingList] = useState<SupabaseBuilding[]>([])
+  const [, setBuildingList] = useState<SupabaseBuilding[]>([])
   const [tenantList, setTenantList] = useState<Tenant[]>([])
   const [loading, setLoading] = useState(false)
   const [openInvoiceDialog, setOpenInvoiceDialog] = useState(false)
@@ -61,37 +60,6 @@ export function QuickCreateSheet() {
         onSave={async (values) => {
           setLoading(true)
           await handleTenantSave(
-            values,
-            "add",
-            null,
-            undefined,
-            {
-              onSuccess: () => {
-                QuickCreateService.close()
-              },
-              onError: () => {},
-            }
-          )
-          setLoading(false)
-        }}
-      />
-    )
-  }
-
-  if (state.type === "expenses") {
-    return (
-      <EditSheet
-        open={state.open}
-        onOpenChange={(open) => { if (!open) QuickCreateService.close() }}
-        title={state.title || "Quick Create Expense"}
-        description={state.description}
-        fields={getExpenseFields(null, buildingList)}
-        saveLabel={state.saveLabel}
-        closeLabel={state.closeLabel}
-        loading={loading || state.loading}
-        onSave={async (values) => {
-          setLoading(true)
-          await handleExpenseSave(
             values,
             "add",
             null,

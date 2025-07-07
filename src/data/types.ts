@@ -327,6 +327,7 @@ export interface UtilityReading {
  * @property {string} created_at - Ngày tạo
  * @property {string} updated_at - Ngày cập nhật
  * @property {SupabaseBuilding} [building] - Thông tin tòa nhà (join)
+ * @property {string} expense_id - Foreign key to expense_types
  */
 export interface BuildingExpense {
   id: number;
@@ -337,6 +338,7 @@ export interface BuildingExpense {
   created_at: string;
   updated_at: string;
   building?: SupabaseBuilding;
+  expense_id?: string;
 }
 
 /**

@@ -205,7 +205,13 @@ export default function NotificationsPage() {
               <FilterDropdown
                 options={statusOptions}
                 buttonLabel="Status"
-                onChange={setStatusFilter}
+                onChange={(vals) => {
+                  if (!vals || vals.length === 0) {
+                    setStatusFilter(['all']);
+                  } else {
+                    setStatusFilter(vals);
+                  }
+                }}
               />
             </div>
             <TablePro

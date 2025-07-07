@@ -67,8 +67,8 @@ export default function RoomsPage() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <DropdownMenuItem onClick={() => handleView(row)}>View</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleEdit(row)}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={e => { e.stopPropagation(); handleView(row); }}>View</DropdownMenuItem>
+        <DropdownMenuItem onClick={e => { e.stopPropagation(); handleEdit(row); }}>Edit</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -155,7 +155,13 @@ export default function RoomsPage() {
                 <FilterDropdown
                   options={buildingList.map(name => ({ value: name, label: name, checked: selectedBuilding.includes(name) }))}
                   buttonLabel="Buildings"
-                  onChange={setSelectedBuilding}
+                  onChange={(vals) => {
+                    if (!vals || vals.length === 0) {
+                      setSelectedBuilding(['all']);
+                    } else {
+                      setSelectedBuilding(vals);
+                    }
+                  }}
                 />
                 <FilterDropdown
                   options={[
@@ -164,7 +170,13 @@ export default function RoomsPage() {
                     { value: "coming_soon", label: "Coming Soon", checked: selectedStatus.includes("coming_soon") },
                   ]}
                   buttonLabel="Status"
-                  onChange={setSelectedStatus}
+                  onChange={(vals) => {
+                    if (!vals || vals.length === 0) {
+                      setSelectedStatus(['all']);
+                    } else {
+                      setSelectedStatus(vals);
+                    }
+                  }}
                 />
               </div>
             </div>
