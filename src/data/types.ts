@@ -370,6 +370,7 @@ export interface NotificationQueueItem {
  * @property {Tenant[]} tenants - Danh sách tenant hiện tại của phòng
  * @property {Tenant[]} exitedTenants - Danh sách tenant đã rời đi
  * @property {SupabaseInvoiceRaw[]} invoices - Danh sách hóa đơn của phòng
+ * @property {Contract[]} contracts - Danh sách hợp đồng của phòng
  * @property {InvoiceItem[]} invoiceItems - Danh sách tất cả các mục hóa đơn của phòng
  * @property {Tenant | null} primaryTenant - Tenant chính (nếu có)
  * @property {{ start: string | null; end: string | null }} leaseRange - Khoảng thời gian thuê
@@ -383,6 +384,7 @@ export interface RoomDetailData {
   tenants: Tenant[];
   exitedTenants: Tenant[];
   invoices: SupabaseInvoiceRaw[];
+  contracts: Contract[];
   invoiceItems: InvoiceItem[];
   primaryTenant: Tenant | null;
   leaseRange: {
@@ -392,4 +394,116 @@ export interface RoomDetailData {
   latestInvoice: SupabaseInvoiceRaw | null;
   paymentStatus: string;
   utilityReading: UtilityReading | null;
+}
+
+/**
+ * @typedef {Object} ContractTemplateField
+ * @property {string} name - Tên field
+ * @property {string} label - Label hiển thị
+ * @property {string} type - Loại field ('text', 'number', 'date', 'textarea')
+ * @property {boolean} required - Bắt buộc hay không
+ * @property {string} [placeholder] - Placeholder text
+ * @property {any} [defaultValue] - Giá trị mặc định
+ */
+export interface ContractTemplateField {
+  name: string;
+  label: string;
+  type: 'text' | 'number' | 'date' | 'textarea' | 'select';
+  required: boolean;
+  placeholder?: string;
+  defaultValue?: string | number | boolean | null;
+  options?: Array<{value: string; label: string}>; // For select type
+}
+
+/**
+ * @typedef {Object} SupabaseContractTemplate
+ * @property {string} id - UUID của template
+ * @property {string} name - Tên template
+ * @property {string} description - Mô tả template
+ * @property {string} content - HTML content với placeholder {field_name}
+ * @property {ContractTemplateField[]} fields - Danh sách các field cần fill
+ * @property {string | null} file_url - URL file template nếu upload từ file
+ * @property {boolean} is_active - Template có đang sử dụng không
+ * @property {string} created_at - Thời gian tạo
+ * @property {string} updated_at - Thời gian cập nhật
+ */
+export interface SupabaseContractTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  content: string;
+  fields: ContractTemplateField[];
+  file_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * @typedef {Object} SupabaseContract
+ * @property {string} id - UUID của contract
+ * @property {string} tenant_id - UUID tenant (FK)
+ * @property {number} apartment_id - ID phòng (FK)
+ * @property {string} template_id - UUID template (FK)
+ * @property {Record<string, any>} contract_data - Data đã fill vào template
+ * @property {string} status - Trạng thái ('draft', 'pending_signature', 'signed', 'completed', 'cancelled')
+ * @property {string | null} file_path - Đường dẫn file trong storage
+ * @property {string | null} signed_file_path - Đường dẫn file đã ký
+ * @property {string} share_token - Token để share link
+ * @property {string | null} signature_data - Base64 của chữ ký
+ * @property {string | null} signed_at - Thời gian ký
+ * @property {string} created_at - Thời gian tạo
+ * @property {string} updated_at - Thời gian cập nhật
+ */
+export interface SupabaseContract {
+  id: string;
+  tenant_id: string;
+  apartment_id: number;
+  template_id: string;
+  contract_data: Record<string, string | number | boolean | Date | null>;
+  status: 'draft' | 'pending_signature' | 'signed' | 'completed' | 'cancelled';
+  file_path: string | null;
+  signed_file_path: string | null;
+  share_token: string;
+  signature_data: string | null;
+  tenant_sign_url: string | null;
+  signed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * @typedef {Object} ContractApartment - Apartment with nested building
+ * @property {SupabaseBuilding | null} building - Thông tin tòa nhà
+ */
+export interface ContractApartment extends SupabaseApartmentRaw {
+  building?: SupabaseBuilding | null;
+}
+
+/**
+ * @typedef {Object} Contract - Extended contract với join data
+ * @property {SupabaseTenant | null} tenant - Thông tin tenant
+ * @property {ContractApartment | null} apartment - Thông tin phòng với building
+ * @property {SupabaseBuilding | null} building - Thông tin tòa nhà (từ apartment.building)
+ * @property {SupabaseContractTemplate | null} template - Thông tin template
+ */
+export interface Contract extends SupabaseContract {
+  tenant?: SupabaseTenant | null;
+  apartment?: ContractApartment | null;
+  building?: SupabaseBuilding | null;
+  template?: SupabaseContractTemplate | null;
+}
+
+/**
+ * @typedef {Object} ContractFormData - Form data để tạo contract mới
+ * @property {string} tenant_id - ID tenant
+ * @property {number} apartment_id - ID phòng
+ * @property {string} template_id - ID template
+ * @property {Record<string, any>} contract_data - Data fill vào template
+ */
+export interface ContractFormData {
+  tenant_id: string;
+  apartment_id: number;
+  template_id: string;
+  contract_data: Record<string, string | number | boolean | Date | null>;
 }

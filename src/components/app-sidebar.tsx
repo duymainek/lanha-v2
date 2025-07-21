@@ -10,6 +10,7 @@ import {
   IconReceipt,
   IconSettings,
   IconUsers,
+  IconFileText,
 } from "@tabler/icons-react"
 
 import { NavOther } from "@/components/nav-documents"
@@ -56,6 +57,11 @@ const data = {
       title: "Tenants",
       url: "/tenants",
       icon: IconUsers,
+    },
+    {
+      title: "Contracts",
+      url: "/contracts",
+      icon: IconFileText,
     },
     {
       title: "Expenses",

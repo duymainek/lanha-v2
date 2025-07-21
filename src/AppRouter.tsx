@@ -14,6 +14,14 @@ import SearchInvoicePage from "./page/search-invoice";
 import InvoiceCreatePage from "./app/page/invoice-create";
 import InvoiceDetailPage from "./app/page/invoice-detail";
 import InvoiceEditPage from "./app/page/invoice-edit";
+import ContractTemplatesPage from "./app/page/contract-templates";
+import CreateContractTemplatePage from "./app/page/contract-templates/create";
+import EditContractTemplatePage from "./app/page/contract-templates/edit/[id]";
+import CreateContractPage from "./app/page/contracts/create";
+import ContractsPage from "./app/page/contracts";
+import ContractPreviewPage from "./app/page/contracts/preview/[id]";
+import ContractEditPage from "./app/page/contracts/edit/[id]";
+import ContractSignPage from "./page/contract-sign/[token]";
 
 export default function AppRouter() {
   return (
@@ -33,6 +41,14 @@ export default function AppRouter() {
       <Route path="/invoice-create" element={<InvoiceCreatePage />} />
       <Route path="/invoice/:id" element={<InvoiceDetailPage />} />
       <Route path="/invoice-edit/:id" element={<InvoiceEditPage />} />
+      <Route path="/contract-templates" element={<ContractTemplatesPage />} />
+      <Route path="/contract-templates/create" element={<CreateContractTemplatePage />} />
+      <Route path="/contract-templates/edit/:id" element={<EditContractTemplatePage />} />
+      <Route path="/contracts" element={<ContractsPage />} />
+      <Route path="/contracts/create" element={<CreateContractPage />} />
+      <Route path="/contracts/preview/:id" element={<ContractPreviewPage />} />
+      <Route path="/contracts/edit/:id" element={<ContractEditPage />} />
+      <Route path="/contract-sign/:token" element={<ContractSignPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

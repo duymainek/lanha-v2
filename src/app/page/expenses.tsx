@@ -223,6 +223,7 @@ export default function ExpensesPage() {
                   selectable
                   onRemoveSelected={handleRemoveSelected}
                   onRowSelectChange={handleRowSelectChange}
+                  hideSum={false}
                 />
                 {selectedRowIds.length > 0 && (
                   <div className="mt-2 text-right font-semibold">

@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import type { Room, SupabaseBuilding, SupabaseInvoiceRaw, UtilityReading, SupabaseTenant, Tenant, BuildingExpense, NotificationQueueItem, RoomDetailData } from './types';
+import type { Room, SupabaseBuilding, SupabaseInvoiceRaw, UtilityReading, SupabaseTenant, Tenant, BuildingExpense, NotificationQueueItem, RoomDetailData, Contract, SupabaseContract, SupabaseContractTemplate } from './types';
 import { SupabaseCacheService } from '@/services/SupabaseCacheService';
 
 /**
@@ -623,12 +623,13 @@ export async function removeTenantFromSupabase(id: string): Promise<boolean> {
  */
 export async function getRoomDetail(roomId: number): Promise<RoomDetailData> {
 
-  const [rooms, tenants, buildings, invoices, utilityReadings] = await Promise.all([
+  const [rooms, tenants, buildings, invoices, utilityReadings, contracts] = await Promise.all([
     fetchRoomsFromSupabase(),
     fetchTenantsFromSupabase(),
     fetchBuildingsFromSupabase(),
     fetchInvoicesFromSupabase(),
     fetchUtilityReadingsByApartment(roomId),
+    fetchContractsFromSupabase(),
   ]);
   const room = rooms.find(r => r.id === roomId);
   if (!room) throw new Error('Room not found');
@@ -641,6 +642,7 @@ export async function getRoomDetail(roomId: number): Promise<RoomDetailData> {
     end: primaryTenant?.move_out_date || null,
   };
   const roomInvoices = invoices.filter(inv => inv.apartment_id === roomId);
+  const roomContracts = contracts.filter(c => c.apartment_id === roomId);
   const latestInvoice = roomInvoices.length > 0 ? [...roomInvoices].sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime())[0] : null;
   let paymentStatus = 'no_invoice';
   if (latestInvoice) paymentStatus = latestInvoice.status;
@@ -652,6 +654,7 @@ export async function getRoomDetail(roomId: number): Promise<RoomDetailData> {
     building,
     tenants: roomTenants,
     invoices: roomInvoices,
+    contracts: roomContracts,
     invoiceItems,
     primaryTenant: primaryTenant || null,
     exitedTenants,
@@ -838,4 +841,290 @@ export async function getNetByBuildingId12Month(): Promise<Record<string, { name
     });
   });
   return result;
+}
+
+/**
+ * Fetch all contracts from Supabase with join data
+ * @returns {Promise<Contract[]>}
+ */
+export async function fetchContractsFromSupabase(): Promise<Contract[]> {
+  return SupabaseCacheService.get('contracts', async () => {
+    const { data, error } = await supabase
+      .from('contracts')
+      .select(`
+        *,
+        tenants:tenant_id (*),
+        apartments:apartment_id (
+          *,
+          buildings:building_id (*)
+        ),
+        contract_templates:template_id (*)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw new Error(error.message);
+    
+    return (data || []).map((contract: any) => ({
+      ...contract,
+      tenant: contract.tenants,
+      apartment: contract.apartments,
+      template: contract.contract_templates,
+      building: contract.apartments?.buildings || null
+    }));
+  });
+}
+
+/**
+ * Fetch contract by ID with join data
+ * @param {string} contractId
+ * @returns {Promise<Contract | null>}
+ */
+export async function fetchContractById(contractId: string): Promise<Contract | null> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .select(`
+      *,
+      tenant:tenant_id (*),
+      apartment:apartment_id (
+        *,
+        buildings:building_id (*)
+      ),
+      template:template_id (*)
+    `)
+    .eq('id', contractId)
+    .single();
+  
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    throw new Error(error.message);
+  }
+  
+  return {
+    ...data,
+    building: data.apartment?.buildings || null
+  };
+}
+
+/**
+ * Create new contract
+ * @param {Partial<SupabaseContract>} contractData
+ * @returns {Promise<SupabaseContract>}
+ */
+export async function createContractInSupabase(contractData: Partial<SupabaseContract>): Promise<SupabaseContract> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .insert(contractData)
+    .select('*')
+    .single();
+  
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('contracts');
+  return data;
+}
+
+/**
+ * Update contract
+ * @param {string} contractId
+ * @param {Partial<SupabaseContract>} updates
+ * @returns {Promise<SupabaseContract>}
+ */
+export async function updateContractInSupabase(
+  contractId: string, 
+  updateData: Partial<{ contract_data: Record<string, unknown> }>
+): Promise<Contract> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .update(updateData)
+    .eq('id', contractId)
+    .select(`
+      *,
+      tenant:tenants(
+        id,
+        full_name,
+        phone,
+        email,
+        id_number,
+        apartment_id,
+        move_in_date,
+        move_out_date
+      ),
+      apartment:apartments(
+        id,
+        unit_number,
+        area,
+        price,
+        building_id,
+        building:buildings(
+          id,
+          name,
+          address
+        )
+      ),
+      template:contract_templates(
+        id,
+        name,
+        content,
+        fields
+      )
+    `)
+    .single()
+
+  if (error) {
+    console.error('Error updating contract:', error)
+    throw new Error(error.message)
+  }
+
+  SupabaseCacheService.clear('contracts')
+  return data as Contract
+}
+
+/**
+ * Delete contract
+ * @param {string} contractId
+ * @returns {Promise<void>}
+ */
+export async function deleteContractFromSupabase(contractId: string): Promise<void> {
+  const { error } = await supabase
+    .from('contracts')
+    .delete()
+    .eq('id', contractId);
+  
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('contracts');
+}
+
+/**
+ * Fetch all contract templates from Supabase
+ * @returns {Promise<SupabaseContractTemplate[]>}
+ */
+export async function fetchContractTemplatesFromSupabase(): Promise<SupabaseContractTemplate[]> {
+  return SupabaseCacheService.get('contract_templates', async () => {
+    const { data, error } = await supabase
+      .from('contract_templates')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw new Error(error.message);
+    return data || [];
+  });
+}
+
+/**
+ * Fetch contract template by ID
+ * @param {string} id - Template ID
+ * @returns {Promise<SupabaseContractTemplate | null>}
+ */
+export async function fetchContractTemplateByIdFromSupabase(id: string): Promise<SupabaseContractTemplate | null> {
+  const { data, error } = await supabase
+    .from('contract_templates')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    throw new Error(error.message);
+  }
+  
+  return data;
+}
+
+/**
+ * Create new contract template
+ * @param {Partial<SupabaseContractTemplate>} templateData
+ * @returns {Promise<SupabaseContractTemplate>}
+ */
+export async function createContractTemplateInSupabase(templateData: Partial<SupabaseContractTemplate>): Promise<SupabaseContractTemplate> {
+  const { data, error } = await supabase
+    .from('contract_templates')
+    .insert(templateData)
+    .select('*')
+    .single();
+  
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('contract_templates');
+  return data;
+}
+
+/**
+ * Update contract template
+ * @param {string} templateId
+ * @param {Partial<SupabaseContractTemplate>} updates
+ * @returns {Promise<SupabaseContractTemplate>}
+ */
+export async function updateContractTemplateInSupabase(templateId: string, updates: Partial<SupabaseContractTemplate>): Promise<SupabaseContractTemplate> {
+  const { data, error } = await supabase
+    .from('contract_templates')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', templateId)
+    .select('*')
+    .single();
+  
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('contract_templates');
+  return data;
+}
+
+/**
+ * Delete contract template
+ * @param {string} templateId
+ * @returns {Promise<void>}
+ */
+export async function deleteContractTemplateFromSupabase(templateId: string): Promise<void> {
+  const { error } = await supabase
+    .from('contract_templates')
+    .delete()
+    .eq('id', templateId);
+  
+  if (error) throw new Error(error.message);
+  SupabaseCacheService.clear('contract_templates');
+}
+
+export async function fetchContractByIdFromSupabase(id: string): Promise<Contract> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .select(`
+      *,
+      tenant:tenants(
+        id,
+        full_name,
+        phone,
+        email,
+        id_number,
+        apartment_id,
+        move_in_date,
+        move_out_date
+      ),
+      apartment:apartments(
+        id,
+        unit_number,
+        area,
+        price,
+        building_id,
+        building:buildings(
+          id,
+          name,
+          address
+        )
+      ),
+      template:contract_templates(
+        id,
+        name,
+        content,
+        fields
+      )
+    `)
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching contract:', error)
+    throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error('Contract not found')
+  }
+
+  return data as Contract
 }

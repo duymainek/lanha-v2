@@ -34,8 +34,9 @@ interface TableProProps<T extends object> {
   selectable?: boolean
   onRowSelectChange?: (selectedIds: (string | number)[]) => void
   onRowClick?: (row: T) => void
+  hideSum?: boolean
 }
-
+  
 export function TablePro<T extends object>({
   columns,
   data,
@@ -49,6 +50,7 @@ export function TablePro<T extends object>({
   selectable = true,
   onRowSelectChange,
   onRowClick,
+  hideSum = true,
 }: TableProProps<T>) {
   const [selectedIds, setSelectedIds] = React.useState<(string | number)[]>([])
   const [allChecked, setAllChecked] = React.useState(false)
@@ -192,7 +194,7 @@ export function TablePro<T extends object>({
           {selectable && (
             <span className="text-muted-foreground hidden text-sm lg:inline-block">
               {selectedIds.length} of {data.length} row(s) selected.
-              {selectedIds.length > 0 && (
+              { !hideSum && selectedIds.length > 0 && (
                 (() => {
                   const total = data
                     .filter(row => selectedIds.includes(rowKey(row)))

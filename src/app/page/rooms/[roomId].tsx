@@ -66,7 +66,7 @@ export default function RoomDetailPage() {
 
 function RoomDetailPanel({ data }: { data: RoomDetailData }) {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'tenants' | 'invoices'>('tenants')
+  const [tab, setTab] = useState<'tenants' | 'invoices' | 'contracts'>('tenants')
   const [openSheet, setOpenSheet] = useState(false)
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -282,7 +282,8 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
             <nav className="flex space-x-8">
               {[
                 { id: 'tenants', label: 'Tenants' },
-                { id: 'invoices', label: 'Invoices' }
+                { id: 'invoices', label: 'Invoices' },
+                { id: 'contracts', label: 'Hợp đồng' }
               ].map((tabItem) => (
                 <button
                   key={tabItem.id}
@@ -448,8 +449,47 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
                 
               </>
             )}
+
+            {/* Contracts Tab */}
+            {tab === 'contracts' && (
+              <>
+                <TablePro
+                  columns={[
+                    { label: "Contract No.", render: (row) => (
+                      <button
+                        className="text-primary underline hover:text-primary/80 cursor-pointer bg-transparent border-0 p-0 italic"
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          navigate(`/contracts/${row.id}`)
+                        }}
+                      >
+                        {row.id.substring(0, 8)}
+                      </button>
+                    ) },
+                    { label: "Tenant", accessor: "tenant", render: (row) => row.tenant?.full_name },
+                    { label: "Start Date", accessor: "contract_data", render: (row) => formatDateToDDMMYYYY(row.contract_data?.start_date as string) },
+                    { label: "End Date", accessor: "contract_data", render: (row) => formatDateToDDMMYYYY(row.contract_data?.end_date as string) },
+                    { label: "Status", accessor: "status", render: (row) => (
+                      <Badge className={
+                        row.status === 'signed'
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : row.status === 'expired'
+                          ? 'bg-red-100 text-red-700 border-red-200'
+                          : 'bg-yellow-50 text-yellow-700 border-yellow-200 px-2 py-1 border'
+                      }>
+                        {row.status}
+                      </Badge>
+                    ) },
+                  ]}
+                  data={data.contracts || []}
+                  rowKey={row => row.id}
+                  selectable={false}
+                />
+              </>
+            )}
           </div>
         </div>
     </div>
   )
-} 
+}
