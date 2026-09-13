@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Là Nhà Apartment — Nguyễn Đình Chiểu | Xem phòng 3D & Đặt thuê</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     DESIGN TOKENS — phong cách tham chiếu: ecomdy-office.vercel.app
+     (nền trời gradient xanh, overlay tối bán trong suốt cho điều hướng,
+     card trắng đặc cho panel chi tiết). Brand đổi từ đỏ Ecomdy sang
+     xanh dương cho Là Nhà.
+     ============================================================ */
+  :root {
+    --ink: #0e1620;
+    --text: #f3f6fa;
+    --muted: #a9b4c2;
+    --line: rgba(255,255,255,.12);
+    --brand: #2f6fed;
+    --brand-2: #5b93ff;
+    --brand-dark: #1f4fc4;
+    --card: #ffffff;
+    --card-ink: #141a24;
+    --card-muted: #6b7684;
+    --pill: rgba(255,255,255,.85);
+  }
+
+  html, body {
+    margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    background: linear-gradient(#8fc4ea 0%, #c9e3f4 45%, #eaf1f6 100%);
+    font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  /* touch-action:pan-y (không phải "none") — để trình duyệt được phép cuộn dọc trang landing
+     ngay từ đầu cử chỉ; app.js tự quyết định lúc nào giữ sự kiện lại để xoay/zoom model
+     (xem khối "touch orbit / pan / pinch-zoom" — kéo dọc 1 ngón khi đã hết góc xoay thì
+     nhường hẳn cho scroll, giống cách chuột lăn xử lý ở đây). */
+  #scene { position:fixed; top:0; left:0; width:100%; height:100%; display:block; touch-action:pan-y; }
+
+  .overlay { position:fixed; z-index:10; }
+
+  /* ---- Nhãn hiệu (logo chữ), góc trên trái ---- */
+  #titleBox { top:20px; left:20px; max-width:min(80vw, 640px); }
+  #titleBox h1 { font-size:34px; line-height:1.1; margin:0; font-weight:800; letter-spacing:.12em; color:#0e1620; }
+
+  #viewMenu {
+    top:210px; left:20px; display:flex; flex-direction:column; gap:6px; width:210px;
+  }
+  #viewMenu button, #modeMenu button {
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left; box-sizing:border-box;
+    border:1px solid var(--line); background:rgba(14,22,32,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    color:#dde3ea; padding:10px 14px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:500;
+    font-family:inherit; transition:.18s;
+  }
+  #viewMenu button:hover { background:rgba(40,52,68,.75); }
+  #viewMenu button.active {
+    background:linear-gradient(135deg, var(--brand), var(--brand-dark)); border-color:var(--brand-2); color:#fff;
+    box-shadow:0 6px 18px rgba(47,111,237,.35);
+  }
+
+  /* ---- Pills trắng nổi (mode, zoom, toggle) ---- */
+  .pill { background:var(--pill); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius:999px; box-shadow:0 4px 14px rgba(0,0,0,.12); border:1px solid rgba(0,0,0,.06); }
+
+  #modeMenu { top:20px; right:20px; display:flex; gap:6px; padding:6px; }
+  #modeMenu button {
+    border:none; background:transparent; color:var(--card-ink); padding:8px 14px; border-radius:999px; cursor:pointer;
+    font-size:12.5px; font-weight:600; font-family:inherit; transition:.18s;
+  }
+  #modeMenu button:hover { background:rgba(0,0,0,.05); }
+  #modeMenu button.active { background:var(--ink); color:#fff; }
+
+  #navHint { bottom:20px; left:20px; padding:9px 16px; font-size:11px; color:var(--card-muted); font-weight:500; }
+
+  /* ---- Info Card: panel bán hàng, card trắng đặc, trượt vào từ phải (kiểu ecomdy .card) ---- */
+  #infoCard {
+    top:96px; right:20px; width:280px; padding:20px 22px; display:none;
+    max-height:calc(100vh - 120px); overflow-y:auto;
+    background:var(--card); color:var(--card-ink); border-radius:16px;
+    box-shadow:0 24px 60px rgba(15,25,45,.28);
+    transform:translateX(24px); opacity:0; transition:.32s cubic-bezier(.2,.8,.2,1);
+  }
+  #infoCard.show { transform:none; opacity:1; }
+  #infoCard.unitMode { width:320px; }
+  #infoCard h2 { font-size:17px; margin:0 0 8px 0; padding-right:22px; font-weight:700; letter-spacing:-0.01em; }
+  #infoCard .meta { font-size:11.5px; color:var(--card-muted); margin-bottom:10px; line-height:1.55; }
+  #infoCard .navRow { display:flex; justify-content:space-between; align-items:center; margin-top:14px; }
+  #infoCard button.nav {
+    width:36px; height:36px; border-radius:50%; border:1px solid #e6e8ec; background:#fff; color:var(--card-ink);
+    cursor:pointer; display:grid; place-items:center; font-size:14px; transition:.15s;
+  }
+  #infoCard button.nav:hover { background:#f3f5f8; }
+  #infoCard .closeBtn {
+    position:absolute; top:14px; right:14px; cursor:pointer; color:var(--card-muted); font-size:14px;
+    background:#f3f5f8; border:none; width:26px; height:26px; border-radius:50%; line-height:1;
+  }
+  #infoCard .closeBtn:hover { background:#e8eaee; }
+
+  .statusBadge { display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.02em; padding:5px 11px; border-radius:20px; margin-bottom:12px; }
+  .statusAvailable { background:#e2f6ea; color:#1a8a4c; }
+  .statusTaken { background:#eef1f5; color:#6b7684; }
+
+  .unitPrice { font-size:24px; font-weight:800; color:var(--brand); margin-bottom:12px; letter-spacing:-0.01em; }
+  .unitPriceSub { font-size:11px; font-weight:500; color:var(--card-muted); }
+
+  .unitFacts { display:flex; gap:8px; margin-bottom:14px; }
+  .unitFacts > div { flex:1; background:#f4f6f9; border-radius:10px; padding:9px 4px; text-align:center; font-size:10.5px; color:var(--card-muted); line-height:1.4; }
+  .unitFacts b { display:block; font-size:14px; color:var(--card-ink); }
+
+  .unitFacing { font-size:11.5px; color:var(--card-muted); margin-bottom:10px; font-weight:500; }
+  .unitDesc { font-size:11.5px; color:#4a5563; line-height:1.6; margin:0 0 12px 0; }
+
+  .amenityList { list-style:none; margin:0 0 16px 0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 8px; }
+  .amenityList li { font-size:10.5px; color:#3c4b58; background:#f4f6f9; border-radius:7px; padding:6px 8px; line-height:1.3; }
+
+  .contactRow { display:flex; gap:8px; margin-bottom:4px; }
+  .contactBtn { flex:1; text-align:center; text-decoration:none; font-size:12px; font-weight:700; padding:10px 6px; border-radius:10px; transition:.15s; }
+  .callBtn { background:var(--brand); color:#fff; }
+  .callBtn:hover { background:var(--brand-dark); }
+  .zaloBtn { background:#0068ff; color:#fff; }
+  .zaloBtn:hover { background:#0052cc; }
+
+  /* ---- Nhãn căn hộ nổi trên bản đồ 3D ---- */
+  .unitLabel {
+    position:fixed; z-index:9; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer;
+    background:rgba(14,22,32,.85); backdrop-filter: blur(6px); color:#fff; border-radius:18px; padding:7px 14px;
+    font-size:12px; font-weight:700; box-shadow:0 6px 16px rgba(0,0,0,.3); white-space:nowrap;
+    display:flex; align-items:center; gap:7px; border:1.5px solid rgba(255,255,255,.25); transition:.15s;
+  }
+  .unitLabel:hover { transform:translate(-50%,-100%) scale(1.06); border-color:var(--brand-2); }
+  .unitBadge { background:var(--brand); color:#fff; border-radius:6px; padding:2px 7px; font-size:10.5px; }
+  .unitLabel.unitTaken { background:rgba(70,80,92,.85); }
+  .unitLabel.unitTaken .unitBadge { background:#8a97a3; }
+
+  .roomLabel {
+    position:fixed; z-index:9; transform:translate(-50%,-100%); pointer-events:auto; cursor:pointer;
+    background:rgba(255,255,255,.95); border-radius:14px; padding:5px 11px; font-size:11px; font-weight:600;
+    color:var(--card-ink); box-shadow:0 3px 10px rgba(0,0,0,.18); white-space:nowrap; transition:.15s;
+  }
+  .roomLabel:hover { background:var(--brand); color:#fff; }
+  .roomLabel.dim { opacity:.55; }
+
+  #zoomCtl { bottom:64px; left:20px; display:flex; gap:4px; padding:6px; }
+  #zoomCtl button {
+    width:36px; height:36px; border:none; background:transparent; border-radius:999px; font-size:16px;
+    cursor:pointer; color:var(--card-ink); font-family:inherit; transition:.15s;
+  }
+  #zoomCtl button:hover { background:rgba(0,0,0,.06); }
+
+  #labelToggleWrap {
+    position:fixed; bottom:20px; right:20px; z-index:11; padding:8px 14px; display:flex; align-items:center; gap:7px;
+    font-size:11.5px; font-weight:500; color:var(--card-ink);
+  }
+  #labelToggleWrap input { cursor:pointer; accent-color:var(--brand); }
+
+  #loading {
+    position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; font-size:14px;
+    color:var(--text); background: linear-gradient(#8fc4ea 0%, #c9e3f4 45%, #eaf1f6 100%);
+    font-family:"Be Vietnam Pro", sans-serif; font-weight:600;
+  }
+
+  /* ============== MOBILE (điện thoại) ==============
+     Layout desktop dùng toạ độ fixed cố định (viewMenu left cột dọc, v.v.) giả định
+     màn hình rộng — trên điện thoại các panel sẽ chồng lên nhau. Bố cục lại thành
+     dải ngang cuộn được ở trên/dưới + info card dạng bottom-sheet toàn chiều rộng. */
+  @media (max-width: 720px) {
+    #titleBox { max-width:calc(100vw - 150px); top:14px; left:14px; }
+    #titleBox h1 { font-size:20px; letter-spacing:.08em; }
+
+    #viewMenu {
+      top:56px; bottom:auto; right:14px; left:auto; width:118px;
+      flex-direction:column; overflow-x:visible; gap:4px; padding:0;
+      max-height:calc(100vh - 70px); overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    #viewMenu button { width:100%; white-space:nowrap; flex:0 0 auto; padding:6px 9px; font-size:10.5px; gap:6px; }
+
+    #modeMenu { top:14px; right:14px; }
+    #modeMenu button { padding:7px 11px; font-size:11.5px; }
+
+    #navHint { display:none; } /* thao tác chạm khác thao tác chuột, hint desktop không còn đúng */
+
+    #zoomCtl { bottom:20px; left:14px; }
+
+    #labelToggleWrap { display:none; } /* để đỡ rối, nhãn căn hộ luôn bật trên mobile */
+
+    #infoCard {
+      top:auto; bottom:0; left:0; right:0; width:auto;
+      max-height:72vh; border-radius:20px 20px 0 0;
+      padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+      transform:translateY(24px);
+    }
+    #infoCard.show { transform:none; }
+    #infoCard.unitMode { width:auto; }
+
+    .amenityList { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">Đang dựng mô hình...</div>
+<canvas id="scene"></canvas>
+
+<div id="titleBox" class="overlay">
+  <h1>LÀ NHÀ APARTMENT</h1>
+</div>
+
+<div id="viewMenu" class="overlay">
+  <button data-view="overview" class="active">Toàn cảnh</button>
+  <button data-view="ham">Tầng hầm</button>
+  <button data-view="floor0">Tầng trệt</button>
+  <button data-view="floor1">Tầng 2</button>
+  <button data-view="floor2">Tầng 3</button>
+  <button data-view="roof">Sân thượng</button>
+</div>
+
+<div id="modeMenu" class="overlay pill">
+  <button data-mode="day" class="active">Ngày</button>
+  <button data-mode="night">Đêm</button>
+</div>
+
+<div id="navHint" class="overlay pill">Kéo trái để xoay · Kéo phải để di chuyển · Cuộn để zoom</div>
+
+<div id="zoomCtl" class="overlay pill">
+  <button id="zoomIn">+</button>
+  <button id="zoomHome">⟲</button>
+  <button id="zoomOut">−</button>
+</div>
+
+<div id="infoCard" class="overlay">
+  <button class="closeBtn" id="infoClose">✕</button>
+  <h2 id="infoTitle">—</h2>
+  <div class="meta" id="infoMeta">—</div>
+  <div class="navRow">
+    <button class="nav" id="infoPrev">◀</button>
+    <button class="nav" id="infoNext">▶</button>
+  </div>
+</div>
+
+<label id="labelToggleWrap" class="pill">
+  <input type="checkbox" id="labelToggle" checked>
+  Hiện nhãn căn hộ
+</label>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
