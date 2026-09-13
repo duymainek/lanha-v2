@@ -1996,6 +1996,72 @@ canvas.addEventListener('wheel', e => {
   camState.zoom = Math.min(Math.max(camState.zoom * (1 - e.deltaY*0.001), ZOOM_MIN), ZOOM_MAX);
 }, { passive:false });
 
+/* touch orbit / pan / pinch-zoom — tương đương bộ mouse ở trên nhưng cho ngón tay.
+   1 ngón kéo = xoay (giống chuột trái), 2 ngón kéo = pan (giống chuột phải),
+   2 ngón chụm/mở = zoom. canvas có touch-action:none (CSS) nên trình duyệt không
+   tự pan/zoom cả trang khi chạm vào model — mọi cử chỉ đều do code này xử lý. */
+let touchMode = null; // 'rotate' | 'pan' | 'pinch'
+let lastTouchX = 0, lastTouchY = 0, lastPinchDist = 0;
+
+function touchMidpoint(t0, t1) {
+  return { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
+}
+function touchDist(t0, t1) {
+  return Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    touchMode = 'rotate';
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    touchMode = 'pinch';
+    lastPinchDist = touchDist(e.touches[0], e.touches[1]);
+    const mid = touchMidpoint(e.touches[0], e.touches[1]);
+    lastTouchX = mid.x; lastTouchY = mid.y;
+  }
+}, { passive:false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (touchMode === 'rotate' && e.touches.length === 1) {
+    const dx = e.touches[0].clientX - lastTouchX, dy = e.touches[0].clientY - lastTouchY;
+    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+    camState.theta -= dx * 0.006;
+    camState.phi = Math.min(Math.max(camState.phi - dy*0.006, 0.15), Math.PI/2 - 0.02);
+  } else if (touchMode === 'pinch' && e.touches.length === 2) {
+    const dist = touchDist(e.touches[0], e.touches[1]);
+    const zoomFactor = dist / lastPinchDist;
+    lastPinchDist = dist;
+    camState.zoom = Math.min(Math.max(camState.zoom * zoomFactor, ZOOM_MIN), ZOOM_MAX);
+
+    // 2 ngón di chuyển cùng lúc (không chỉ chụm/mở) = pan, giống chuột phải
+    const mid = touchMidpoint(e.touches[0], e.touches[1]);
+    const dx = mid.x - lastTouchX, dy = mid.y - lastTouchY;
+    lastTouchX = mid.x; lastTouchY = mid.y;
+    const panSpeed = camState.radius * 0.0016;
+    const right = new THREE.Vector3(Math.cos(camState.theta),0,-Math.sin(camState.theta));
+    const up = new THREE.Vector3(0,1,0);
+    camState.target.addScaledVector(right, -dx*panSpeed);
+    camState.target.addScaledVector(up, dy*panSpeed);
+  }
+}, { passive:false });
+
+function touchEnd(e) {
+  if (e.touches.length === 0) {
+    touchMode = null;
+  } else if (e.touches.length === 1) {
+    // Từ pinch/pan xuống còn 1 ngón: chuyển tiếp mượt sang xoay thay vì dừng hẳn.
+    touchMode = 'rotate';
+    lastTouchX = e.touches[0].clientX;
+    lastTouchY = e.touches[0].clientY;
+  }
+}
+canvas.addEventListener('touchend', touchEnd);
+canvas.addEventListener('touchcancel', touchEnd);
+
 document.getElementById('zoomIn').addEventListener('click', () => camState.zoom = Math.min(camState.zoom*1.2, ZOOM_MAX));
 document.getElementById('zoomOut').addEventListener('click', () => camState.zoom = Math.max(camState.zoom/1.2, ZOOM_MIN));
 document.getElementById('zoomHome').addEventListener('click', () => applyView(state.view));

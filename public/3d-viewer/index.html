@@ -33,7 +33,7 @@
     background: linear-gradient(#8fc4ea 0%, #c9e3f4 45%, #eaf1f6 100%);
     font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  #scene { position:fixed; top:0; left:0; width:100%; height:100%; display:block; }
+  #scene { position:fixed; top:0; left:0; width:100%; height:100%; display:block; touch-action:none; }
 
   .overlay { position:fixed; z-index:10; }
 
@@ -165,12 +165,12 @@
     #titleBox h1 { font-size:20px; letter-spacing:.08em; }
 
     #viewMenu {
-      top:56px; bottom:auto; right:14px; left:auto; width:170px;
-      flex-direction:column; overflow-x:visible; gap:6px; padding:0;
+      top:56px; bottom:auto; right:14px; left:auto; width:118px;
+      flex-direction:column; overflow-x:visible; gap:4px; padding:0;
       max-height:calc(100vh - 70px); overflow-y:auto;
       -webkit-overflow-scrolling:touch;
     }
-    #viewMenu button { width:100%; white-space:nowrap; flex:0 0 auto; padding:10px 14px; }
+    #viewMenu button { width:100%; white-space:nowrap; flex:0 0 auto; padding:6px 9px; font-size:10.5px; gap:6px; }
 
     #modeMenu { top:14px; right:14px; }
     #modeMenu button { padding:7px 11px; font-size:11.5px; }
