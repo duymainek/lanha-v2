@@ -28,7 +28,7 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Địa Chỉ</h3>
             <div className="space-y-3">
-              <p>Lô 90 Khu B2-7, khu đô thị Phú Mỹ An, Ngũ Hành Sơn, Đà Nẵng</p>
+              <p>Đường Nguyễn Quý Anh, Khu đô thị FPT, Ngũ Hành Sơn, Đà Nẵng</p>
               <p>228 Đ. Nguyễn Đình Chiểu, Khuê Mỹ, Ngũ Hành Sơn, Đà Nẵng</p>
             </div>
           </div>

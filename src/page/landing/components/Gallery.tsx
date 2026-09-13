@@ -51,14 +51,14 @@ export function Gallery() {
   }
 
   return (
-    <section className="py-24 bg-slate-50">
+    <section className="bg-slate-50 py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            className="font-heading text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
           >
             Khám Phá Không Gian Sống
           </motion.h2>
@@ -85,7 +85,7 @@ export function Gallery() {
               <motion.div
                 key={`${apartment.id}-${index}`}
                 variants={item}
-                className="relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer group"
+                className="relative aspect-[4/3] overflow-hidden rounded-2xl cursor-pointer group shadow-[0_18px_40px_rgba(15,25,45,0.08)]"
                 onClick={() => setSelectedImage(image)}
               >
                 <img
@@ -94,10 +94,10 @@ export function Gallery() {
                   className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <p className="text-white font-medium opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                <div className="absolute top-3 left-3">
+                  <span className="rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-md">
                     {apartment.type}
-                  </p>
+                  </span>
                 </div>
               </motion.div>
             ))

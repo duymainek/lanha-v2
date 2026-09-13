@@ -6,6 +6,7 @@ import {
   WifiIcon,
   CurrencyDollarIcon,
 } from '@heroicons/react/24/outline'
+import { LowPolyTree } from './decor/LowPolyTree'
 
 const amenities = [
   {
@@ -59,14 +60,15 @@ export function Amenities() {
   }
 
   return (
-    <section className="py-24 bg-white" id="amenities">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-white py-24" id="amenities">
+      <LowPolyTree className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 opacity-10 sm:h-52 sm:w-52" />
+      <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            className="font-heading text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
           >
             Tiện Ích & Dịch Vụ
           </motion.h2>
@@ -90,11 +92,11 @@ export function Amenities() {
         >
           {amenities.map((amenity) => (
             <motion.div key={amenity.category} variants={item}>
-              <Card className="p-6 h-full hover:shadow-lg transition-shadow duration-300">
+              <Card className="h-full rounded-2xl border-black/5 p-6 shadow-[0_18px_40px_rgba(15,25,45,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(15,25,45,0.14)]">
                 <div className="flex flex-col h-full">
                   <div className="mb-6">
-                    <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
-                      <amenity.icon className="w-6 h-6 text-slate-600" />
+                    <div className="w-12 h-12 bg-brand/10 rounded-xl flex items-center justify-center mb-4">
+                      <amenity.icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900">
                       {amenity.category}
@@ -103,7 +105,7 @@ export function Amenities() {
                   <ul className="space-y-3 text-gray-600 flex-grow">
                     {amenity.items.map((item, index) => (
                       <li key={index} className="flex items-center">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2" />
+                        <span className="w-1.5 h-1.5 bg-brand rounded-full mr-2" />
                         {item}
                       </li>
                     ))}

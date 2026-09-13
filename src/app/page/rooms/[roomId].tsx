@@ -474,7 +474,7 @@ function RoomDetailPanel({ data }: { data: RoomDetailData }) {
                       <Badge className={
                         row.status === 'signed'
                           ? 'bg-green-100 text-green-700 border-green-200'
-                          : row.status === 'expired'
+                          : row.status === 'cancelled'
                           ? 'bg-red-100 text-red-700 border-red-200'
                           : 'bg-yellow-50 text-yellow-700 border-yellow-200 px-2 py-1 border'
                       }>

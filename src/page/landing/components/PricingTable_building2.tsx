@@ -73,7 +73,7 @@ export function PricingTable_building2() {
       <div className="max-w-5xl mx-auto px-2 sm:px-">
         {/* Heading */}
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-bold tracking-tight text-gray-900 mb-4">Nguyễn Đình Chiểu Apartment</h2>
+          <h2 className="font-heading text-4xl font-bold tracking-tight text-gray-900 mb-4">Nguyễn Đình Chiểu Apartment</h2>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
             228 Nguyễn Đình Chiểu, Khuê Mỹ, Ngũ Hành Sơn, Đà Nẵng
           </p>
@@ -86,7 +86,7 @@ export function PricingTable_building2() {
             <Switch
               checked={billing === 'year'}
               onCheckedChange={(checked: boolean) => setBilling(checked ? 'year' : 'sixMonths')}
-              className="data-[state=checked]:bg-slate-900"
+              className="data-[state=checked]:bg-brand"
             />
             <span className={`text-sm ${billing === 'year' ? 'text-gray-900 font-semibold' : 'text-gray-500'}`}>12 tháng</span>
           </div>
@@ -95,15 +95,15 @@ export function PricingTable_building2() {
         <div className="hidden md:block">
           <TooltipProvider>
             <div
-              className="grid grid-cols-4 min-w-[900px] border border-slate-200 rounded-xl overflow-hidden bg-white"
-              style={{ boxShadow: '0 2px 16px 0 rgba(0,0,0,0.03)' }}
+              className="grid grid-cols-4 min-w-[900px] border border-slate-200 rounded-2xl overflow-hidden bg-white"
+              style={{ boxShadow: '0 24px 60px rgba(15,25,45,0.08)' }}
             >
               {/* Empty cell for toggle row */}
               <div className="flex flex-col justify-end border-r border-slate-200 bg-white px-6 py-6"></div>
               {planData.map((plan,) => (
                 <div
                   key={plan.name}
-                  className={`flex flex-col items-center px-6 py-6 border-r last:border-r-0 border-slate-200 bg-white ${plan.recommended ? 'shadow-lg border-2 border-slate-900 z-10' : ''}`}
+                  className={`flex flex-col items-center px-6 py-6 border-r last:border-r-0 border-slate-200 bg-white ${plan.recommended ? 'shadow-lg border-2 border-brand z-10' : ''}`}
                   style={{ minHeight: 220 }}
                 >
                   <span className="text-base font-bold text-gray-900 uppercase tracking-wide mb-1">{plan.name}</span>
@@ -215,7 +215,7 @@ export function PricingTable_building2() {
           {planData.map((plan,) => (
             <div
               key={plan.name}
-              className={`border border-slate-200 rounded-xl bg-white shadow-sm ${plan.recommended ? 'shadow-lg border-2 border-slate-900' : ''}`}
+              className={`border border-slate-200 rounded-2xl bg-white shadow-sm ${plan.recommended ? 'shadow-lg border-2 border-brand' : ''}`}
             >
               <div className="flex flex-col items-center px-6 pt-6 pb-2">
                 <span className="text-base font-bold text-gray-900 uppercase tracking-wide mb-1">{plan.name}</span>
@@ -269,9 +269,9 @@ interface ContactButtonProps {
 
 function ContactButton({ className, onClick }: ContactButtonProps) {
   return (
-    <Button 
-      size="lg" 
-      className={`w-full bg-black text-white hover:bg-slate-100 mt-4 ${className || ''}`}
+    <Button
+      size="lg"
+      className={`w-full bg-brand text-white hover:bg-brand-dark mt-4 ${className || ''}`}
       onClick={onClick}
     >
       Liên hệ

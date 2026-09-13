@@ -11,9 +11,9 @@ interface ContactDialogProps {
 export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs text-center">
+      <DialogContent className="max-w-xs rounded-2xl text-center">
         <DialogHeader>
-          <DialogTitle>Liên hệ với Là Nhà</DialogTitle>
+          <DialogTitle className="font-heading">Liên hệ với Là Nhà</DialogTitle>
           <DialogDescription>
             Chọn một phương thức liên hệ bên dưới:
           </DialogDescription>
@@ -21,7 +21,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
         <div className="flex flex-col gap-4 mt-4">
           <Button
             asChild
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base flex items-center gap-2 justify-center"
+            className="w-full bg-brand hover:bg-brand-dark text-white text-base flex items-center gap-2 justify-center"
             size="lg"
           >
             <a href="tel:0777460408">
@@ -30,7 +30,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
           </Button>
           <Button
             asChild
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white text-base flex items-center gap-2 justify-center"
+            className="w-full bg-[#0068ff] hover:bg-[#0052cc] text-white text-base flex items-center gap-2 justify-center"
             size="lg"
           >
             <a href="https://zalo.me/0777460408" target="_blank" rel="noopener noreferrer">

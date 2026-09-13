@@ -5,6 +5,34 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: "Be Vietnam Pro", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Brand tokens dùng riêng cho landing page — đồng bộ với /public/3d-viewer/index.html
+   (banner 3D). Namespace tách biệt khỏi biến shadcn (--primary, --background, ...)
+   để không ảnh hưởng các trang admin/dashboard dùng chung theme này. */
+:root {
+  --brand: #2f6fed;
+  --brand-dark: #1f4fc4;
+  --brand-light: #5b93ff;
+  --leaf: #5f9153;
+  --leaf-dark: #4a7440;
+  --trunk: #6b4a30;
+  --grass: #8fae63;
+  --sky-top: #8fc4ea;
+  --sky-bottom: #eaf1f6;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
+  --color-leaf: var(--leaf);
+  --color-leaf-dark: var(--leaf-dark);
+  --color-trunk: var(--trunk);
+  --color-grass: var(--grass);
+  --color-sky-top: var(--sky-top);
+  --color-sky-bottom: var(--sky-bottom);
 }
 
 html,
