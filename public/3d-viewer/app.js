@@ -1998,10 +1998,22 @@ canvas.addEventListener('wheel', e => {
 
 /* touch orbit / pan / pinch-zoom — tương đương bộ mouse ở trên nhưng cho ngón tay.
    1 ngón kéo = xoay (giống chuột trái), 2 ngón kéo = pan (giống chuột phải),
-   2 ngón chụm/mở = zoom. canvas có touch-action:none (CSS) nên trình duyệt không
-   tự pan/zoom cả trang khi chạm vào model — mọi cử chỉ đều do code này xử lý. */
-let touchMode = null; // 'rotate' | 'pan' | 'pinch'
+   2 ngón chụm/mở = zoom.
+
+   Scroll-chaining cho 1 ngón (giống hệt logic của canvas.wheel ở trên): CSS đặt
+   touch-action:pan-y (không phải "none") nên trình duyệt SẴN SÀNG tự cuộn trang dọc
+   nếu mình không preventDefault(). Ở touchmove đầu tiên của mỗi lần chạm, nếu cử chỉ
+   chủ yếu là kéo dọc (|dy|>|dx|) VÀ góc phi đã chạm biên trên/dưới (không còn gì để
+   xoay thêm theo chiều đó) thì bỏ qua, không preventDefault — trình duyệt sẽ tự nhận
+   lấy cử chỉ này và cuộn trang xuống các section khác. Mọi trường hợp còn lại (kéo
+   ngang, hoặc kéo dọc nhưng phi chưa chạm biên) vẫn giữ lại để xoay model như cũ.
+   Phải quyết định NGAY ở lần move đầu tiên vì trình duyệt chỉ cho chọn 1 lần duy nhất
+   giữa "trang tự cuộn" và "JS xử lý" cho mỗi cử chỉ chạm — không thể đổi ý giữa chừng. */
+const PHI_MIN = 0.15, PHI_MAX = Math.PI/2 - 0.02;
+let touchMode = null; // 'rotate' | 'pinch' | 'scrolling-page' | null (chờ quyết định)
+let touchDecided = false; // đã quyết định rotate hay nhường cho trang ở lần move đầu chưa
 let lastTouchX = 0, lastTouchY = 0, lastPinchDist = 0;
+let touchStartX = 0, touchStartY = 0;
 
 function touchMidpoint(t0, t1) {
   return { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
@@ -2011,13 +2023,17 @@ function touchDist(t0, t1) {
 }
 
 canvas.addEventListener('touchstart', e => {
-  e.preventDefault();
   if (e.touches.length === 1) {
-    touchMode = 'rotate';
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
+    // Chưa preventDefault ở đây: còn phải chờ hướng kéo ở touchmove đầu tiên mới biết
+    // là xoay model hay nhường cho trang cuộn.
+    touchMode = null;
+    touchDecided = false;
+    touchStartX = lastTouchX = e.touches[0].clientX;
+    touchStartY = lastTouchY = e.touches[0].clientY;
   } else if (e.touches.length === 2) {
+    e.preventDefault();
     touchMode = 'pinch';
+    touchDecided = true;
     lastPinchDist = touchDist(e.touches[0], e.touches[1]);
     const mid = touchMidpoint(e.touches[0], e.touches[1]);
     lastTouchX = mid.x; lastTouchY = mid.y;
@@ -2025,12 +2041,27 @@ canvas.addEventListener('touchstart', e => {
 }, { passive:false });
 
 canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && !touchDecided) {
+    touchDecided = true;
+    const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
+    const verticalDrag = Math.abs(dy) > Math.abs(dx);
+    const phiAtLimit = camState.phi <= PHI_MIN + 1e-3 || camState.phi >= PHI_MAX - 1e-3;
+    if (verticalDrag && phiAtLimit) {
+      // Nhường cử chỉ này cho trình duyệt cuộn trang — không preventDefault, không set
+      // lại touchMode nữa (giữ null) để các lần move tiếp theo cũng bỏ qua tương tự.
+      touchMode = 'scrolling-page';
+      return;
+    }
+    touchMode = 'rotate';
+  }
+  if (touchMode === 'scrolling-page') return; // đã nhường cho trang, không can thiệp nữa
+
   e.preventDefault();
   if (touchMode === 'rotate' && e.touches.length === 1) {
     const dx = e.touches[0].clientX - lastTouchX, dy = e.touches[0].clientY - lastTouchY;
     lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
     camState.theta -= dx * 0.006;
-    camState.phi = Math.min(Math.max(camState.phi - dy*0.006, 0.15), Math.PI/2 - 0.02);
+    camState.phi = Math.min(Math.max(camState.phi - dy*0.006, PHI_MIN), PHI_MAX);
   } else if (touchMode === 'pinch' && e.touches.length === 2) {
     const dist = touchDist(e.touches[0], e.touches[1]);
     const zoomFactor = dist / lastPinchDist;
@@ -2052,11 +2083,14 @@ canvas.addEventListener('touchmove', e => {
 function touchEnd(e) {
   if (e.touches.length === 0) {
     touchMode = null;
+    touchDecided = false;
   } else if (e.touches.length === 1) {
-    // Từ pinch/pan xuống còn 1 ngón: chuyển tiếp mượt sang xoay thay vì dừng hẳn.
-    touchMode = 'rotate';
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
+    // Từ pinch/pan xuống còn 1 ngón: chờ quyết định lại từ đầu (giống touchstart) thay vì
+    // ép luôn thành rotate — tránh trường hợp buông bớt 1 ngón giữa lúc đang ở biên phi.
+    touchMode = null;
+    touchDecided = false;
+    touchStartX = lastTouchX = e.touches[0].clientX;
+    touchStartY = lastTouchY = e.touches[0].clientY;
   }
 }
 canvas.addEventListener('touchend', touchEnd);
